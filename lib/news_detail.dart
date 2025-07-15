@@ -88,7 +88,12 @@ class _DetailNewsState extends State<DetailNews> {
   // Header com navegação e bookmark
   Widget buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+     padding: const EdgeInsets.only(
+      left: 20, 
+      right: 20, 
+      top: 40,    // <- Aumentar o top
+      bottom: 15, // <- Manter o bottom
+    ),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
