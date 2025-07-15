@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:news_app/Model/news_model.dart';
 import 'package:news_app/news_detail.dart';
-
-// Importe o carrossel (assumindo que está em um arquivo separado)
-// import 'package:news_app/widgets/featured_news_carousel.dart';
+import 'package:news_app/pages/profile_page.dart';
 
 class NewsHomePage extends StatefulWidget {
   const NewsHomePage({super.key});
@@ -29,81 +27,149 @@ class _NewsHomePageState extends State<NewsHomePage> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF), // Fundo branco
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: ListView(
-            children: [
-              // Header
-              const Text(
-                "Explore",
-                style: TextStyle(
-                  fontSize: 37,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF333333), // Texto principal
-                ),
-              ),
-              const SizedBox(height: 12),
-              
-              // Barra de pesquisa
-              searchBar(),
-              const SizedBox(height: 25),
-              
-              // ✨ CARROSSEL DE DESTAQUE - NOVO!
-              const FeaturedNewsCarousel(),
-              const SizedBox(height: 30),
-              
-              // Seção Hot Topics
-              const Padding(
-                padding: EdgeInsets.only(right: 20),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.local_fire_department,
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFFFFFFF),
+    body: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.only(left: 20, top: 10), // Adicionado top: 10
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 100), // Adicionado padding inferior
+          children: [
+            // Header com saudação e perfil
+            buildHeader(),
+            const SizedBox(height: 12),
+            
+            // Barra de pesquisa
+            searchBar(),
+            const SizedBox(height: 25),
+            
+            // Carrossel de destaque
+            const FeaturedNewsCarousel(),
+            const SizedBox(height: 30),
+            
+            // Seção Hot Topics
+            const Padding(
+              padding: EdgeInsets.only(right: 20),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.local_fire_department,
+                    color: Color(0xFFC7A87B),
+                    size: 28,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    "Hot Topics",
+                    style: TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF333333),
+                    ),
+                  ),
+                  Spacer(),
+                  Text(
+                    "Ver todos",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFFC7A87B),
-                      size: 28,
                     ),
-                    SizedBox(width: 8),
-                    Text(
-                      "Hot Topics",
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF333333),
-                      ),
-                    ),
-                    Spacer(),
-                    Text(
-                      "Ver todos",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFFC7A87B),
-                      ),
-                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 15),
+            
+            // Categorias clicáveis
+            buildCategoriesSection(),
+            const SizedBox(height: 25),
+            
+            // Seção Notícias Recentes
+            buildRecentNewsSection(),
+            const SizedBox(height: 25),
+            
+            // Seção Mais Lidas
+            buildMostReadSection(),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+  // Header com saudação e botão de perfil
+  Widget buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 20),
+      child: Row(
+        children: [
+          // Saudação
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Olá, João! 👋",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: const Color(0xFF333333).withOpacity(0.7),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  "Explore",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF333333),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Botão de perfil
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePage(),
+                ),
+              );
+            },
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFC7A87B),
+                    Color(0xFF8B5E3C),
                   ],
                 ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFC7A87B).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              const SizedBox(height: 15),
-              
-              // Categorias clicáveis
-              buildCategoriesSection(),
-              const SizedBox(height: 25),
-              
-              // Seção Notícias Recentes
-              buildRecentNewsSection(),
-              const SizedBox(height: 25),
-              
-              // Seção Mais Lidas
-              buildMostReadSection(),
-              const SizedBox(height: 20),
-            ],
+              child: const Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -611,7 +677,7 @@ class _NewsHomePageState extends State<NewsHomePage> {
   }
 }
 
-// Widget do carrossel (copie do arquivo anterior)
+// Widget do carrossel (incluído aqui para ser independente)
 class FeaturedNewsCarousel extends StatefulWidget {
   const FeaturedNewsCarousel({super.key});
 
@@ -940,4 +1006,5 @@ class _FeaturedNewsCarouselState extends State<FeaturedNewsCarousel> {
       ],
     );
   }
+
 }
