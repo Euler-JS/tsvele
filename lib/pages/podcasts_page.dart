@@ -103,6 +103,7 @@ class _PodcastsPageState extends State<PodcastsPage> {
       backgroundColor: const Color(0xFFFFFFFF),
       appBar: AppBar(
         backgroundColor: Colors.white,
+        toolbarHeight: 100,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Text(

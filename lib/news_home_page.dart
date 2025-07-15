@@ -33,7 +33,10 @@ Widget build(BuildContext context) {
     backgroundColor: const Color(0xFFFFFFFF),
     body: SafeArea(
       child: Padding(
-        padding: const EdgeInsets.only(left: 20, top: 10), // Adicionado top: 10
+        padding: EdgeInsets.only(
+    left: 20, 
+    top: MediaQuery.of(context).padding.top + 40, // <- Espaçamento dinâmico
+  ),
         child: ListView(
           padding: const EdgeInsets.only(bottom: 100), // Adicionado padding inferior
           children: [
@@ -276,7 +279,7 @@ Widget build(BuildContext context) {
               ),
               SizedBox(width: 8),
               Text(
-                "Notícias Recentes",
+                "Recentes",
                 style: TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.bold,

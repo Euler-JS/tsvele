@@ -35,6 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: const Color(0xFFFFFFFF),
       appBar: AppBar(
         backgroundColor: Colors.white,
+        toolbarHeight: 100,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(
