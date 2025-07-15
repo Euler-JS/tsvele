@@ -183,7 +183,9 @@ class _CategoriesPageState extends State<CategoriesPage> {
           const SizedBox(height: 16),
           
           // Estatísticas rápidas
-          Row(
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
             children: [
               _buildStatChip(
                 "${filteredNews.length}",

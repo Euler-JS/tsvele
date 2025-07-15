@@ -204,26 +204,26 @@ class _PodcastsPageState extends State<PodcastsPage> {
           const SizedBox(height: 16),
           
           // Estatísticas
-          Row(
-            children: [
-              _buildStatChip(
-                "${filteredPodcasts.length}",
-                "Episódios",
-                Icons.podcasts,
-              ),
-              const SizedBox(width: 12),
-              _buildStatChip(
-                "${filteredPodcasts.where((p) => p['isPremium']).length}",
-                "Premium",
-                Icons.workspace_premium,
-              ),
-              const SizedBox(width: 12),
-              _buildStatChip(
-                "${filteredPodcasts.where((p) => p['isNew']).length}",
-                "Novos",
-                Icons.new_releases,
-              ),
-            ],
+         Wrap(
+  spacing: 12,
+  runSpacing: 8,
+  children: [
+    _buildStatChip(
+      "${filteredPodcasts.length}",
+      "Episódios",
+      Icons.podcasts,
+    ),
+    _buildStatChip(
+      "${filteredPodcasts.where((p) => p['isPremium']).length}",
+      "Premium",
+      Icons.workspace_premium,
+    ),
+    _buildStatChip(
+      "${filteredPodcasts.where((p) => p['isNew']).length}",
+      "Novos",
+      Icons.new_releases,
+    ),
+  ],
           ),
         ],
       ),

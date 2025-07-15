@@ -255,7 +255,9 @@ class _VideosPageState extends State<VideosPage> {
           const SizedBox(height: 16),
           
           // Estatísticas
-          Row(
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
             children: [
               _buildStatChip(
                 "${filteredVideos.length}",
