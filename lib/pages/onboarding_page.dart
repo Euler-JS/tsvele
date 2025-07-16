@@ -15,21 +15,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final List<OnboardingItem> onboardingItems = [
     OnboardingItem(
       title: "Bem-vindo ao\nTsevele",
-      description: "Mantenha-se atualizado com as últimas notícias de Moçambique e do mundo, tudo em um só lugar.",
-      image: "Images/onboarding1.png",
-      color: const Color(0xFFC7A87B),
+      subtitle: "Mantenha-se atualizado com as últimas notícias de Moçambique e do mundo, tudo em um só lugar.",
+      iconData: Icons.newspaper,
+      gradientColors: [const Color(0xFFC7A87B), const Color(0xFF8B5E3C)],
     ),
     OnboardingItem(
       title: "Notícias\nPersonalizadas",
-      description: "Escolha suas categorias favoritas e receba conteúdo personalizado baseado nos seus interesses.",
-      image: "Images/onboarding2.png",
-      color: const Color(0xFF8B5E3C),
+      subtitle: "Escolha suas categorias favoritas e receba conteúdo personalizado baseado nos seus interesses.",
+      iconData: Icons.notifications_active,
+      gradientColors: [const Color(0xFF8B5E3C), const Color(0xFFC7A87B)],
     ),
     OnboardingItem(
       title: "Conteúdo\nPremium",
-      description: "Acesse artigos exclusivos, análises aprofundadas e conteúdo premium dos melhores jornalistas.",
-      image: "Images/onboarding3.png",
-      color: const Color(0xFFC7A87B),
+      subtitle: "Acesse artigos exclusivos, análises aprofundadas e conteúdo premium dos melhores jornalistas.",
+      iconData: Icons.workspace_premium,
+      gradientColors: [const Color(0xFFC7A87B), const Color(0xFFBA55D3)],
     ),
   ];
 
@@ -48,155 +48,170 @@ class _OnboardingPageState extends State<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: onboardingItems[currentPage].gradientColors,
+          ),
+        ),
+        child: Stack(
           children: [
-            // Skip button
-            Padding(
-              padding: const EdgeInsets.only(top: 20, right: 20),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: () => _navigateToLogin(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5F5F5),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Pular',
-                      style: TextStyle(
-                        color: Color(0xFF333333),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // PageView
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    currentPage = index;
-                  });
-                },
-                itemCount: onboardingItems.length,
-                itemBuilder: (context, index) {
-                  return buildOnboardingPage(onboardingItems[index]);
-                },
-              ),
-            ),
-
-            // Bottom section
-            Padding(
-              padding: const EdgeInsets.all(30),
+            // Formas geométricas de fundo
+            _buildBackgroundShapes(),
+            
+            // Conteúdo principal
+            SafeArea(
               child: Column(
                 children: [
-                  // Page indicators
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      onboardingItems.length,
-                      (index) => buildDot(index),
+                  // Skip button
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20, right: 20),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () => _navigateToLogin(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Pular',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
 
-                  const SizedBox(height: 40),
+                  // PageView
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: (index) {
+                        setState(() {
+                          currentPage = index;
+                        });
+                      },
+                      itemCount: onboardingItems.length,
+                      itemBuilder: (context, index) {
+                        return buildOnboardingPage(onboardingItems[index]);
+                      },
+                    ),
+                  ),
 
-                  // Next/Get Started button
+                  // Bottom section
                   Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          onboardingItems[currentPage].color,
-                          onboardingItems[currentPage].color.withOpacity(0.8),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: onboardingItems[currentPage].color.withOpacity(0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
+                    padding: const EdgeInsets.all(40),
+                    child: Column(
+                      children: [
+                        // Page indicators
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            onboardingItems.length,
+                            (index) => buildDot(index),
+                          ),
+                        ),
+
+                        const SizedBox(height: 40),
+
+                        // Buttons row
+                        Row(
+                          children: [
+                            // Sign in button
+                            Expanded(
+                              child: Container(
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: () => _navigateToLogin(),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    "Login",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            
+                            const SizedBox(width: 16),
+                            
+                            // Sign up button
+                            Expanded(
+                              child: Container(
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    if (currentPage < onboardingItems.length - 1) {
+                                      _pageController.nextPage(
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                      );
+                                    } else {
+                                      _navigateToSignUp();
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    currentPage < onboardingItems.length - 1 
+                                        ? 'Continuar' 
+                                        : 'Começar',
+                                    style: TextStyle(
+                                      color: onboardingItems[currentPage].gradientColors[0],
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (currentPage < onboardingItems.length - 1) {
-                          _pageController.nextPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        } else {
-                          _navigateToLogin();
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            currentPage < onboardingItems.length - 1 
-                                ? 'Continuar' 
-                                : 'Começar',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.arrow_forward,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Already have account
-                  GestureDetector(
-                    onTap: () => _navigateToLogin(),
-                    child: RichText(
-                      text: const TextSpan(
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF333333),
-                        ),
-                        children: [
-                          TextSpan(text: 'Já tem uma conta? '),
-                          TextSpan(
-                            text: 'Fazer login',
-                            style: TextStyle(
-                              color: Color(0xFFC7A87B),
-                              fontWeight: FontWeight.bold,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ],
@@ -208,36 +223,112 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
+  Widget _buildBackgroundShapes() {
+    return Stack(
+      children: [
+        // Círculo grande superior esquerdo
+        Positioned(
+          top: -100,
+          left: -100,
+          child: Container(
+            width: 300,
+            height: 300,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.1),
+            ),
+          ),
+        ),
+        
+        // Círculo médio superior direito
+        Positioned(
+          top: 100,
+          right: -50,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.08),
+            ),
+          ),
+        ),
+        
+        // Círculo pequeno centro esquerdo
+        Positioned(
+          top: 300,
+          left: 30,
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.06),
+            ),
+          ),
+        ),
+        
+        // Círculo grande inferior direito
+        Positioned(
+          bottom: -150,
+          right: -100,
+          child: Container(
+            width: 400,
+            height: 400,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.05),
+            ),
+          ),
+        ),
+        
+        // Forma fluida adicional
+        Positioned(
+          bottom: 200,
+          left: -50,
+          child: Container(
+            width: 200,
+            height: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(100),
+              color: Colors.white.withOpacity(0.04),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget buildOnboardingPage(OnboardingItem item) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30),
+      padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Illustration
+          // Icon container
           Container(
-            width: 280,
-            height: 280,
+            width: 140,
+            height: 140,
             decoration: BoxDecoration(
-              color: item.color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(140),
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(70),
               border: Border.all(
-                color: item.color.withOpacity(0.3),
+                color: Colors.white.withOpacity(0.3),
                 width: 2,
               ),
             ),
             child: Center(
               child: Container(
-                width: 200,
-                height: 200,
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
-                  color: item.color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(100),
+                  color: Colors.white.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(50),
                 ),
                 child: Icon(
-                  _getIconForPage(currentPage),
-                  size: 100,
-                  color: item.color,
+                  item.iconData,
+                  size: 50,
+                  color: item.gradientColors[0],
                 ),
               ),
             ),
@@ -251,7 +342,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF333333),
+              color: Colors.white,
               height: 1.2,
             ),
             textAlign: TextAlign.center,
@@ -259,12 +350,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
           const SizedBox(height: 20),
 
-          // Description
+          // Subtitle
           Text(
-            item.description,
+            item.subtitle,
             style: TextStyle(
               fontSize: 16,
-              color: const Color(0xFF333333).withOpacity(0.7),
+              color: Colors.white.withOpacity(0.9),
               height: 1.5,
             ),
             textAlign: TextAlign.center,
@@ -278,28 +369,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: currentPage == index ? 24 : 8,
+      width: currentPage == index ? 32 : 8,
       height: 8,
       decoration: BoxDecoration(
         color: currentPage == index 
-            ? onboardingItems[currentPage].color 
-            : const Color(0xFFC7A87B).withOpacity(0.3),
+            ? Colors.white 
+            : Colors.white.withOpacity(0.4),
         borderRadius: BorderRadius.circular(4),
       ),
     );
-  }
-
-  IconData _getIconForPage(int page) {
-    switch (page) {
-      case 0:
-        return Icons.newspaper;
-      case 1:
-        return Icons.tune;
-      case 2:
-        return Icons.workspace_premium;
-      default:
-        return Icons.newspaper;
-    }
   }
 
   void _navigateToLogin() {
@@ -310,18 +388,27 @@ class _OnboardingPageState extends State<OnboardingPage> {
       ),
     );
   }
+
+  void _navigateToSignUp() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LoginPage(), // Pode alterar para SignUpPage se preferir
+      ),
+    );
+  }
 }
 
 class OnboardingItem {
   final String title;
-  final String description;
-  final String image;
-  final Color color;
+  final String subtitle;
+  final IconData iconData;
+  final List<Color> gradientColors;
 
   OnboardingItem({
     required this.title,
-    required this.description,
-    required this.image,
-    required this.color,
+    required this.subtitle,
+    required this.iconData,
+    required this.gradientColors,
   });
 }

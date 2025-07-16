@@ -1,5 +1,3 @@
-// Para integrar as novas telas no seu app, atualize o main.dart assim:
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:news_app/pages/login_page.dart';
@@ -43,7 +41,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Tela de splash que decide qual tela mostrar primeiro
+// Tela de splash moderna que decide qual tela mostrar primeiro
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -92,91 +90,174 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFC7A87B),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFC7A87B),
+              Color(0xFF8B5E3C),
+              Color(0xFFC7A87B),
+            ],
+          ),
+        ),
+        child: Stack(
           children: [
-            // Logo do app
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+            // Formas geométricas de fundo
+            _buildBackgroundShapes(),
+            
+            // Conteúdo central
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo do app
+                  Container(
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(35),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.newspaper,
+                      color: Color(0xFFC7A87B),
+                      size: 70,
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // Nome do app
+                  const Text(
+                    'Tsevele',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Text(
+                    'Suas notícias, sempre atualizadas',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+
+                  const SizedBox(height: 60),
+
+                  // Loading indicator
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        strokeWidth: 3,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.newspaper,
-                color: Color(0xFFC7A87B),
-                size: 60,
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Nome do app
-            const Text(
-              'Tsevele',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              'Suas notícias, sempre atualizadas',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white.withOpacity(0.9),
-              ),
-            ),
-
-            const SizedBox(height: 50),
-
-            // Loading indicator
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildBackgroundShapes() {
+    return Stack(
+      children: [
+        // Círculo grande superior esquerdo
+        Positioned(
+          top: -100,
+          left: -100,
+          child: Container(
+            width: 300,
+            height: 300,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.1),
+            ),
+          ),
+        ),
+        
+        // Círculo médio superior direito
+        Positioned(
+          top: 100,
+          right: -50,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.08),
+            ),
+          ),
+        ),
+        
+        // Círculo pequeno centro esquerdo
+        Positioned(
+          top: 400,
+          left: 50,
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.06),
+            ),
+          ),
+        ),
+        
+        // Círculo grande inferior direito
+        Positioned(
+          bottom: -150,
+          right: -100,
+          child: Container(
+            width: 400,
+            height: 400,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.05),
+            ),
+          ),
+        ),
+        
+        // Forma fluida adicional
+        Positioned(
+          bottom: 200,
+          left: -50,
+          child: Container(
+            width: 200,
+            height: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(100),
+              color: Colors.white.withOpacity(0.04),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
-
-// Também adicione este método nas suas telas de login e signup para salvar o estado:
-
-/* 
-No login_page.dart, no método _login(), após o login bem-sucedido, adicione:
-
-final prefs = await SharedPreferences.getInstance();
-await prefs.setBool('isLoggedIn', true);
-await prefs.setBool('hasSeenOnboarding', true);
-
-No signup_page.dart, no método _signUp(), após o cadastro bem-sucedido, adicione:
-
-final prefs = await SharedPreferences.getInstance();
-await prefs.setBool('isLoggedIn', true);
-await prefs.setBool('hasSeenOnboarding', true);
-
-No onboarding_page.dart, no método _navigateToLogin(), adicione:
-
-final prefs = await SharedPreferences.getInstance();
-await prefs.setBool('hasSeenOnboarding', true);
-
-Para logout, adicione um botão que faça:
-
-final prefs = await SharedPreferences.getInstance();
-await prefs.setBool('isLoggedIn', false);
-Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
-*/
