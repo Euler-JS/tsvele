@@ -44,7 +44,7 @@ class _PodcastsPageState extends State<PodcastsPage> {
       'id': '3',
       'title': 'Economia em Foco',
       'description': 'Análises económicas e mercados financeiros',
-      'host': 'João Macamo',
+      'host': 'Silva Macamo',
       'duration': '35 min',
       'category': 'Economia',
       'image': 'Images/podcast3.png',

@@ -14,7 +14,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   // Dados simulados do usuário
   final Map<String, dynamic> userData = {
-    'name': 'João Carlos Matsinhe',
+    'name': 'Silva Carlos Matsinhe',
     'email': 'joao.matsinhe@email.com',
     'avatar': null, // Pode ser uma URL de imagem
     'isPremium': true,

@@ -151,7 +151,7 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Olá, João! 👋",
+                      "Olá, Silva! 👋",
                       style: TextStyle(
                         fontSize: 16,
                         color: const Color(0xFF666666),

@@ -655,7 +655,7 @@ class _DetailNewsState extends State<DetailNews> {
         'likes': 5,
       },
       {
-        'name': 'João Macamo',
+        'name': 'Silva Macamo',
         'time': '4h', 
         'comment': 'Ótimo artigo! É importante preservar estas tradições.',
         'likes': 3,
