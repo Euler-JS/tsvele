@@ -123,7 +123,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
             // Nome do app
             const Text(
-              'News Moz',
+              'Tsevele',
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,

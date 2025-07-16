@@ -14,7 +14,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   final List<OnboardingItem> onboardingItems = [
     OnboardingItem(
-      title: "Bem-vindo ao\nNews Moz",
+      title: "Bem-vindo ao\nTsevele",
       description: "Mantenha-se atualizado com as últimas notícias de Moçambique e do mundo, tudo em um só lugar.",
       image: "Images/onboarding1.png",
       color: const Color(0xFFC7A87B),

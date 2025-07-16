@@ -603,12 +603,28 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _socialLogin(String provider) {
+    // Para teste
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Login com $provider em desenvolvimento'),
-        backgroundColor: const Color(0xFFC7A87B),
-      ),
-    );
+          const SnackBar(
+            content: Text('Login realizado com sucesso!'),
+            backgroundColor: Color(0xFFC7A87B),
+          ),
+        );
+
+        // Navegar para a tela principal
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MainNavigationPage(),
+          ),
+        );
+        
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   SnackBar(
+    //     content: Text('Login com $provider em desenvolvimento'),
+    //     backgroundColor: const Color(0xFFC7A87B),
+    //   ),
+    // );
   }
 
   void _forgotPassword() {

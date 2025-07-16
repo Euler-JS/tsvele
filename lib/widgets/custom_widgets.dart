@@ -411,7 +411,7 @@ class NewsAppLogo extends StatelessWidget {
         if (showText) ...[
           SizedBox(height: size * 0.15),
           Text(
-            'News Moz',
+            'Tsevele',
             style: TextStyle(
               fontSize: size * 0.3,
               fontWeight: FontWeight.bold,
