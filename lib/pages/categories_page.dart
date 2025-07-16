@@ -113,7 +113,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
           // Grid de categorias
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.only(left: 20, right: 20),
               child: Column(
                 children: [
                   // Seletor de categorias
@@ -186,20 +186,18 @@ class _CategoriesPageState extends State<CategoriesPage> {
           // Estatísticas rápidas
           Wrap(
             spacing: 12,
-            runSpacing: 8,
+            runSpacing: 4,
             children: [
               _buildStatChip(
                 "${filteredNews.length}",
                 "Notícias",
                 Icons.article,
               ),
-              const SizedBox(width: 12),
-              _buildStatChip(
-                "${categoryStats.keys.length - 1}",
-                "Categorias",
-                Icons.category,
-              ),
-              const SizedBox(width: 12),
+              // _buildStatChip(
+              //   "${categoryStats.keys.length - 1}",
+              //   "Categorias",
+              //   Icons.category,
+              // ),
               _buildStatChip(
                 "${filteredNews.where((n) => n.isPremium).length}",
                 "Premium",
