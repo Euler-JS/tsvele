@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:news_app/Model/news_model.dart';
+import 'package:news_app/Model/api_news_model.dart';
+import 'package:news_app/services/api_service.dart';
 import 'package:news_app/news_detail.dart';
 import 'package:news_app/pages/profile_page.dart';
 
@@ -17,6 +19,15 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   List<Yournews> filteredNews = newsItems;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  
+  // Estados da API
+  List<ApiNewsModel> featuredNews = [];
+  List<ApiNewsModel> apiNews = [];
+  List<CategoryModel> categories = [];
+  bool isLoadingFeatured = true;
+  bool isLoadingNews = true;
+  bool isLoadingCategories = true;
+  String? errorMessage;
   
   // Stats do usuário simulados
   int articlesReadToday = 5;
@@ -38,6 +49,11 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
       curve: Curves.easeInOut,
     ));
     _animationController.forward();
+    
+    // Carregar dados da API
+    _loadFeaturedNews();
+    _loadCategories();
+    _loadAllNews();
   }
 
   @override
@@ -55,6 +71,68 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
         filteredNews = NewsHelper.getNewsByCategory(category);
       }
     });
+  }
+
+  // Métodos para carregar dados da API
+  Future<void> _loadFeaturedNews() async {
+    try {
+      setState(() {
+        isLoadingFeatured = true;
+        errorMessage = null;
+      });
+      
+      final news = await ApiService.getFeaturedNews();
+      setState(() {
+        featuredNews = news;
+        isLoadingFeatured = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingFeatured = false;
+        errorMessage = e.toString();
+      });
+      print('Erro ao carregar notícias em destaque: $e');
+    }
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      setState(() {
+        isLoadingCategories = true;
+      });
+      
+      final categoryList = await ApiService.getCategories();
+      setState(() {
+        categories = categoryList;
+        isLoadingCategories = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingCategories = false;
+      });
+      print('Erro ao carregar categorias: $e');
+    }
+  }
+
+  Future<void> _loadAllNews() async {
+    try {
+      setState(() {
+        isLoadingNews = true;
+      });
+      
+      final response = await ApiService.getAllNews(page: 1, perPage: 20);
+      final newsList = response['news'] as List<ApiNewsModel>;
+      
+      setState(() {
+        apiNews = newsList;
+        isLoadingNews = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingNews = false;
+      });
+      print('Erro ao carregar notícias: $e');
+    }
   }
 
   @override
@@ -95,7 +173,11 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
               SliverToBoxAdapter(
                 child: FadeTransition(
                   opacity: _fadeAnimation,
-                  child: const EnhancedFeaturedCarousel(),
+                  child: EnhancedFeaturedCarousel(
+                    featuredNews: featuredNews,
+                    isLoading: isLoadingFeatured,
+                    errorMessage: errorMessage,
+                  ),
                 ),
               ),
               
@@ -131,7 +213,13 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   }
 
   Future<void> _refreshContent() async {
-    await Future.delayed(const Duration(milliseconds: 1000));
+    // Recarregar dados da API
+    await Future.wait([
+      _loadFeaturedNews(),
+      _loadCategories(),
+      _loadAllNews(),
+    ]);
+    
     setState(() {
       // Simula atualização de conteúdo
       articlesReadToday += 1;
@@ -1124,9 +1212,18 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   }
 }
 
-// Carrossel melhorado
+// Carrossel melhorado com dados da API
 class EnhancedFeaturedCarousel extends StatefulWidget {
-  const EnhancedFeaturedCarousel({super.key});
+  final List<ApiNewsModel> featuredNews;
+  final bool isLoading;
+  final String? errorMessage;
+
+  const EnhancedFeaturedCarousel({
+    super.key,
+    required this.featuredNews,
+    required this.isLoading,
+    this.errorMessage,
+  });
 
   @override
   State<EnhancedFeaturedCarousel> createState() => _EnhancedFeaturedCarouselState();
@@ -1135,7 +1232,6 @@ class EnhancedFeaturedCarousel extends StatefulWidget {
 class _EnhancedFeaturedCarouselState extends State<EnhancedFeaturedCarousel> {
   late PageController _pageController;
   int currentPage = 0;
-  List<Yournews> featuredNews = NewsHelper.getFeaturedNews();
 
   @override
   void initState() {
@@ -1187,152 +1283,371 @@ class _EnhancedFeaturedCarouselState extends State<EnhancedFeaturedCarousel> {
           
           const SizedBox(height: 16),
           
-          SizedBox(
-            height: 300,
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  currentPage = index;
-                });
-              },
-              itemCount: featuredNews.length,
-              itemBuilder: (context, index) {
-                final news = featuredNews[index];
-                return Container(
-                  margin: const EdgeInsets.only(right: 20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+          // Loading state
+          if (widget.isLoading)
+            Container(
+              height: 300,
+              margin: const EdgeInsets.only(right: 20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC7A87B)),
+                ),
+              ),
+            )
+          
+          // Error state
+          else if (widget.errorMessage != null)
+            Container(
+              height: 300,
+              margin: const EdgeInsets.only(right: 20),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.red.shade200),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Erro ao carregar notícias',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red.shade700,
                       ),
-                    ],
-                  ),
-                  child: Stack(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          image: DecorationImage(
-                            image: AssetImage(news.newsImage),
-                            fit: BoxFit.cover,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Toque para tentar novamente',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.red.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          
+          // Empty state
+          else if (widget.featuredNews.isEmpty)
+            Container(
+              height: 300,
+              margin: const EdgeInsets.only(right: 20),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.article_outlined,
+                      size: 48,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Nenhuma notícia em destaque',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          
+          // Success state with data
+          else
+            SizedBox(
+              height: 300,
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    currentPage = index;
+                  });
+                },
+                itemCount: widget.featuredNews.length,
+                itemBuilder: (context, index) {
+                  final news = widget.featuredNews[index];
+                  return Container(
+                    margin: const EdgeInsets.only(right: 20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            image: DecorationImage(
+                              image: NetworkImage(news.getImageUrl()),
+                              fit: BoxFit.cover,
+                              onError: (exception, stackTrace) {
+                                // Em caso de erro, usar imagem padrão
+                              },
+                            ),
+                          ),
+                          child: news.getImageUrl().contains('placeholder') 
+                              ? Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(24),
+                                    color: Colors.grey.shade300,
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.image,
+                                      size: 64,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
+                        
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.8),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withOpacity(0.8),
+                        
+                        // Badges de Premium e Video/Audio
+                        Positioned(
+                          top: 16,
+                          left: 16,
+                          child: Row(
+                            children: [
+                              if (news.isPremiumContent)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFC7A87B),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    "Premium",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(width: 6),
+                              if (news.isVideo)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      Icon(Icons.play_arrow, color: Colors.white, size: 12),
+                                      SizedBox(width: 2),
+                                      Text(
+                                        "VÍDEO",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              if (news.isAudio)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      Icon(Icons.headphones, color: Colors.white, size: 12),
+                                      SizedBox(width: 2),
+                                      Text(
+                                        "ÁUDIO",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
                         ),
-                      ),
-                      
-                      // Conteúdo
-                      Positioned(
-                        bottom: 24,
-                        left: 24,
-                        right: 24,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: news.color.withOpacity(0.9),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                news.newsCategories,
+                        
+                        // Conteúdo
+                        Positioned(
+                          bottom: 24,
+                          left: 24,
+                          right: 24,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (news.category != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: news.getCategoryColor().withOpacity(0.9),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    news.category!.name,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              
+                              const SizedBox(height: 12),
+                              
+                              Text(
+                                news.title,
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 12,
+                                  fontSize: 22,
                                   fontWeight: FontWeight.bold,
+                                  height: 1.3,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            
-                            const SizedBox(height: 12),
-                            
-                            Text(
-                              news.newsTitle,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                height: 1.3,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            
-                            const SizedBox(height: 8),
-                            
-                            Text(
-                              news.description,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 14,
-                                height: 1.4,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            
-                            const SizedBox(height: 16),
-                            
-                            ElevatedButton(
-                              onPressed: () {
-                                NewsHelper.incrementViews(news);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => DetailNews(news: news),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFC7A87B),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              child: const Text(
-                                "Ler Agora",
+                              
+                              const SizedBox(height: 8),
+                              
+                              Text(
+                                news.description,
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white.withOpacity(0.9),
                                   fontSize: 14,
+                                  height: 1.4,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              
+                              const SizedBox(height: 12),
+                              
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.visibility,
+                                    size: 16,
+                                    color: Colors.white.withOpacity(0.8),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    "${news.totalViews}",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white.withOpacity(0.8),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    news.getTimeAgo(),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              
+                              const SizedBox(height: 16),
+                              
+                              ElevatedButton(
+                                onPressed: () {
+                                  // Incrementar views na API
+                                  ApiService.incrementViews(news.id);
+                                  
+                                  // Navegar para detalhes (implementar depois)
+                                  // Navigator.push(
+                                  //   context,
+                                  //   MaterialPageRoute(
+                                  //     builder: (context) => ApiNewsDetail(news: news),
+                                  //   ),
+                                  // );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFC7A87B),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                child: const Text(
+                                  "Ler Agora",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
           
-          if (featuredNews.length > 1)
+          // Indicadores de página
+          if (!widget.isLoading && widget.featuredNews.length > 1)
             Padding(
               padding: const EdgeInsets.only(top: 20, right: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  featuredNews.length,
+                  widget.featuredNews.length,
                   (index) => AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
