@@ -23,9 +23,11 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   // Estados da API
   List<ApiNewsModel> featuredNews = [];
   List<ApiNewsModel> apiNews = [];
+  List<ApiNewsModel> recentNews = [];
   List<CategoryModel> categories = [];
   bool isLoadingFeatured = true;
   bool isLoadingNews = true;
+  bool isLoadingRecent = true;
   bool isLoadingCategories = true;
   String? errorMessage;
   
@@ -54,6 +56,7 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
     _loadFeaturedNews();
     _loadCategories();
     _loadAllNews();
+    _loadRecentNews();
   }
 
   @override
@@ -132,6 +135,25 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
         isLoadingNews = false;
       });
       print('Erro ao carregar notícias: $e');
+    }
+  }
+
+  Future<void> _loadRecentNews() async {
+    try {
+      setState(() {
+        isLoadingRecent = true;
+      });
+      
+      final news = await ApiService.getRecentNews();
+      setState(() {
+        recentNews = news;
+        isLoadingRecent = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingRecent = false;
+      });
+      print('Erro ao carregar notícias recentes: $e');
     }
   }
 
@@ -216,12 +238,11 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
     // Recarregar dados da API
     await Future.wait([
       _loadFeaturedNews(),
-      _loadCategories(),
       _loadAllNews(),
+      _loadRecentNews(),
     ]);
     
     setState(() {
-      // Simula atualização de conteúdo
       articlesReadToday += 1;
     });
   }
@@ -711,8 +732,6 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   }
 
   Widget buildEnhancedRecentNews() {
-    final recentNews = NewsHelper.getRecentNews();
-    
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 0, 32),
       child: Column(
@@ -759,17 +778,57 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 280,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(left: 0),
-              itemCount: recentNews.length,
-              itemBuilder: (context, index) {
-                return buildEnhancedNewsCard(recentNews[index]);
-              },
+          
+          // Loading state
+          if (isLoadingRecent)
+            Container(
+              height: 280,
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFC7A87B),
+                ),
+              ),
+            )
+          
+          // Error state
+          else if (recentNews.isEmpty && !isLoadingRecent)
+            Container(
+              height: 280,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.article_outlined,
+                      size: 48,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Nenhuma notícia recente encontrada",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          
+          // Success state with data
+          else
+            SizedBox(
+              height: 280,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(left: 0),
+                itemCount: recentNews.length,
+                itemBuilder: (context, index) {
+                  return buildApiNewsCard(recentNews[index]);
+                },
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -1021,6 +1080,261 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                         const Spacer(),
                         Text(
                           news.time,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildApiNewsCard(ApiNewsModel news, {bool isPersonalized = false}) {
+    return GestureDetector(
+      onTap: () {
+        // Incrementar views na API
+        ApiService.incrementViews(news.id);
+        
+        // Navegar para detalhes (você pode criar uma nova página de detalhes para API news)
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => ApiNewsDetail(news: news),
+        //   ),
+        // );
+      },
+      child: Container(
+        width: 220,
+        margin: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                Container(
+                  height: 140,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                    image: DecorationImage(
+                      image: NetworkImage(news.getImageUrl()),
+                      fit: BoxFit.cover,
+                      onError: (exception, stackTrace) {
+                        // Fallback para imagem padrão se falhar
+                      },
+                    ),
+                  ),
+                  child: news.getImageUrl().contains('assets/') 
+                    ? Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
+                          ),
+                          image: DecorationImage(
+                            image: AssetImage('assets/images/placeholder.jpg'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    : null,
+                ),
+                
+                // Gradient overlay
+                Container(
+                  height: 140,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.3),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                // Badges
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Row(
+                    children: [
+                      if (isPersonalized)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8B5E3C),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            "Para Você",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      if (isPersonalized) const SizedBox(width: 6),
+                      if (news.totalViews > 2000)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            "TRENDING",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      if (news.isVideo)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.purple,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            "VÍDEO",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      if (news.isAudio)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            "ÁUDIO",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                
+                if (news.isPremiumContent)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC7A87B),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        "Premium",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: news.getCategoryColor().withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        news.newsCategories,
+                        style: TextStyle(
+                          color: news.getCategoryColor(),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    Text(
+                      news.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D3748),
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    
+                    const Spacer(),
+                    
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.visibility,
+                          size: 14,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          "${news.totalViews}",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          news.getTimeAgo(),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
