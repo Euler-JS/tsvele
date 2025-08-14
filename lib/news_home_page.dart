@@ -24,12 +24,15 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   List<ApiNewsModel> featuredNews = [];
   List<ApiNewsModel> apiNews = [];
   List<ApiNewsModel> recentNews = [];
+  List<ApiNewsModel> mostReadNews = [];
   List<CategoryModel> categories = [];
   bool isLoadingFeatured = true;
   bool isLoadingNews = true;
   bool isLoadingRecent = true;
+  bool isLoadingMostRead = true;
   bool isLoadingCategories = true;
   String? errorMessage;
+  String? errorMostRead;
   
   // Stats do usuário simulados
   int articlesReadToday = 5;
@@ -57,6 +60,7 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
     _loadCategories();
     _loadAllNews();
     _loadRecentNews();
+    _loadMostReadNews();
   }
 
   @override
@@ -157,6 +161,27 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
     }
   }
 
+  Future<void> _loadMostReadNews() async {
+    try {
+      setState(() {
+        isLoadingMostRead = true;
+        errorMostRead = null;
+      });
+      
+      final news = await ApiService.getMostReadNews();
+      setState(() {
+        mostReadNews = news;
+        isLoadingMostRead = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingMostRead = false;
+        errorMostRead = e.toString();
+      });
+      print('Erro ao carregar notícias mais lidas: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -240,6 +265,7 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
       _loadFeaturedNews(),
       _loadAllNews(),
       _loadRecentNews(),
+      _loadMostReadNews(),
     ]);
     
     setState(() {
@@ -835,8 +861,6 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   }
 
   Widget buildEnhancedMostRead() {
-    final mostReadNews = NewsHelper.getMostReadNews().take(3).toList();
-    
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 32),
       child: Column(
@@ -880,15 +904,58 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
             ],
           ),
           const SizedBox(height: 16),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: mostReadNews.length,
-            itemBuilder: (context, index) {
-              final news = mostReadNews[index];
-              return buildEnhancedHorizontalCard(news, index + 1);
-            },
-          ),
+          if (isLoadingMostRead)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: CircularProgressIndicator(
+                  color: Color(0xFFC7A87B),
+                ),
+              ),
+            )
+          else if (errorMostRead != null)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                    SizedBox(height: 8),
+                    Text(
+                      'Erro ao carregar notícias mais lidas',
+                      style: TextStyle(color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else if (mostReadNews.isEmpty)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(Icons.article_outlined, size: 48, color: Colors.grey),
+                    SizedBox(height: 8),
+                    Text(
+                      'Nenhuma notícia encontrada',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: mostReadNews.length > 5 ? 5 : mostReadNews.length,
+              itemBuilder: (context, index) {
+                final news = mostReadNews[index];
+                return buildApiHorizontalCard(news, index + 1);
+              },
+            ),
         ],
       ),
     );
@@ -1509,6 +1576,195 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                       
                       Text(
                         news.time,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildApiHorizontalCard(ApiNewsModel news, int ranking) {
+    return GestureDetector(
+      onTap: () {
+        // Incrementar views na API
+        ApiService.incrementViews(news.id);
+        
+        // Navegar para detalhes da notícia
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => DetailNews(news: news), // Usar DetailNews quando disponível
+        //   ),
+        // );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                gradient: ranking <= 3 
+                    ? LinearGradient(
+                        colors: ranking == 1 
+                            ? [Colors.amber, Colors.orange]
+                            : ranking == 2 
+                                ? [Colors.grey, Colors.grey.shade400]
+                                : [Colors.brown, Colors.brown.shade400],
+                      )
+                    : const LinearGradient(
+                        colors: [Color(0xFFC7A87B), Color(0xFF8B5E3C)],
+                      ),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Center(
+                child: ranking <= 3 
+                    ? Icon(
+                        ranking == 1 ? Icons.emoji_events : Icons.star,
+                        color: Colors.white,
+                        size: 20,
+                      )
+                    : Text(
+                        "$ranking",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+              ),
+            ),
+            
+            const SizedBox(width: 16),
+            
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  news.getImageUrl(),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey.shade200,
+                      child: Icon(
+                        Icons.image,
+                        color: Colors.grey.shade400,
+                        size: 30,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            
+            const SizedBox(width: 16),
+            
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          news.title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2D3748),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (news.isPremiumContent)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFC7A87B),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            "Premium",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: news.getCategoryColor().withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          news.newsCategories,
+                          style: TextStyle(
+                            color: news.getCategoryColor(),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(width: 12),
+                      
+                      Icon(
+                        Icons.visibility,
+                        size: 14,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${news.totalViews}",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      
+                      const Spacer(),
+                      
+                      Text(
+                        news.getTimeAgo(),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
