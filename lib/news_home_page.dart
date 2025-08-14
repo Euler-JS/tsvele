@@ -541,50 +541,77 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
 
   Widget buildBreakingNews() {
     // Simula notícia urgente
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red.shade200),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.flash_on, color: Colors.white, size: 16),
+    return GestureDetector(
+      onTap: () {
+        // Criar uma notícia fictícia para a breaking news
+        final breakingNews = Yournews(
+          image: "assets/image/tsevele_logo.png",
+          newsImage: "assets/image/tsevele_logo.png",
+          newsTitle: 'Nova descoberta arqueológica em Sofala',
+          newsCategories: "URGENTE",
+          time: "agora",
+          date: "14 de agosto de 2025",
+          color: Colors.red,
+          description: "Arqueólogos descobriram artefactos importantes em Sofala que podem mudar nossa compreensão da história da região.",
+          fullContent: "Uma equipa de arqueólogos internacionais, em colaboração com especialistas moçambicanos, fez uma descoberta extraordinária na província de Sofala. Os artefactos encontrados incluem cerâmica antiga, ferramentas de pedra e possíveis inscrições que datam de vários séculos atrás.\n\nA descoberta está a ser considerada como uma das mais importantes da década na região, prometendo revelar novos aspectos da história e cultura dos povos que habitaram esta área.\n\nOs especialistas estão ainda a analisar os achados, mas as primeiras indicações sugerem que estes artefactos podem fornecer informações valiosas sobre as rotas comerciais antigas e as práticas culturais das comunidades locais.\n\nO Ministério da Cultura e Turismo já foi informado sobre a descoberta e estão a ser tomadas medidas para proteger o sítio arqueológico.",
+          isPremium: false,
+          views: 5420,
+          isBookmarked: false,
+          isFeatured: true,
+        );
+        
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailNews(news: breakingNews),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'URGENTE',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Text(
-                  'Nova descoberta arqueológica em Sofala',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2D3748),
-                  ),
-                ),
-              ],
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.red.shade200),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.flash_on, color: Colors.white, size: 16),
             ),
-          ),
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.red),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'URGENTE',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    'Nova descoberta arqueológica em Sofala',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.red),
+          ],
+        ),
       ),
     );
   }
@@ -1170,13 +1197,29 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
         // Incrementar views na API
         ApiService.incrementViews(news.id);
         
-        // Navegar para detalhes (você pode criar uma nova página de detalhes para API news)
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => ApiNewsDetail(news: news),
-        //   ),
-        // );
+        // Converter ApiNewsModel para Yournews para usar a tela de detalhes existente
+        final convertedNews = Yournews(
+          image: news.getImageUrl(),
+          newsImage: news.getImageUrl(),
+          newsTitle: news.title,
+          newsCategories: news.newsCategories,
+          time: news.getTimeAgo(),
+          date: news.formatDate(),
+          color: news.getCategoryColor(),
+          description: news.description,
+          fullContent: news.description,
+          isPremium: news.isPremiumContent,
+          views: news.totalViews,
+          isBookmarked: news.isBookmarked,
+          isFeatured: news.isFeatured,
+        );
+        
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailNews(news: convertedNews),
+          ),
+        );
       },
       child: Container(
         width: 220,
@@ -1598,13 +1641,29 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
         // Incrementar views na API
         ApiService.incrementViews(news.id);
         
-        // Navegar para detalhes da notícia
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => DetailNews(news: news), // Usar DetailNews quando disponível
-        //   ),
-        // );
+        // Converter ApiNewsModel para Yournews para usar a tela de detalhes existente
+        final convertedNews = Yournews(
+          image: news.getImageUrl(),
+          newsImage: news.getImageUrl(),
+          newsTitle: news.title,
+          newsCategories: news.newsCategories,
+          time: news.getTimeAgo(),
+          date: news.formatDate(),
+          color: news.getCategoryColor(),
+          description: news.description,
+          fullContent: news.description,
+          isPremium: news.isPremiumContent,
+          views: news.totalViews,
+          isBookmarked: news.isBookmarked,
+          isFeatured: news.isFeatured,
+        );
+        
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailNews(news: convertedNews),
+          ),
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -2176,13 +2235,29 @@ class _EnhancedFeaturedCarouselState extends State<EnhancedFeaturedCarousel> {
                                   // Incrementar views na API
                                   ApiService.incrementViews(news.id);
                                   
-                                  // Navegar para detalhes (implementar depois)
-                                  // Navigator.push(
-                                  //   context,
-                                  //   MaterialPageRoute(
-                                  //     builder: (context) => ApiNewsDetail(news: news),
-                                  //   ),
-                                  // );
+                                  // Converter ApiNewsModel para Yournews para usar a tela de detalhes existente
+                                  final convertedNews = Yournews(
+                                    image: news.getImageUrl(),
+                                    newsImage: news.getImageUrl(),
+                                    newsTitle: news.title,
+                                    newsCategories: news.newsCategories,
+                                    time: news.getTimeAgo(),
+                                    date: news.formatDate(),
+                                    color: news.getCategoryColor(),
+                                    description: news.description,
+                                    fullContent: news.description,
+                                    isPremium: news.isPremiumContent,
+                                    views: news.totalViews,
+                                    isBookmarked: news.isBookmarked,
+                                    isFeatured: news.isFeatured,
+                                  );
+                                  
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => DetailNews(news: convertedNews),
+                                    ),
+                                  );
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFC7A87B),

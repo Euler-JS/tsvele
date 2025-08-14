@@ -125,7 +125,7 @@ class ApiService {
   static Future<List<CategoryModel>> getCategories() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/categories'),
+        Uri.parse('$baseUrl/news/categories'),
         headers: headers,
       );
       
@@ -150,7 +150,7 @@ class ApiService {
   static Future<void> incrementViews(int newsId) async {
     try {
       await http.post(
-        Uri.parse('$baseUrl/news/$newsId/view'),
+        Uri.parse('$baseUrl/news/$newsId/views'),
         headers: headers,
       );
     } catch (e) {
