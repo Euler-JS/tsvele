@@ -125,7 +125,7 @@ class ApiService {
   static Future<List<CategoryModel>> getCategories() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/news/categories'),
+        Uri.parse('$baseUrl/news-categories'),
         headers: headers,
       );
       

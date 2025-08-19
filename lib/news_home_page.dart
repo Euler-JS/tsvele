@@ -7,6 +7,19 @@ import 'package:news_app/services/api_service.dart';
 import 'package:news_app/news_detail.dart';
 import 'package:news_app/pages/profile_page.dart';
 
+// Classe helper para categorias
+class CategoryItem {
+  final int id;
+  final String name;
+  final bool isAll;
+
+  CategoryItem({
+    required this.id,
+    required this.name,
+    this.isAll = false,
+  });
+}
+
 class NewsHomePage extends StatefulWidget {
   const NewsHomePage({super.key});
 
@@ -182,6 +195,271 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
     }
   }
 
+  // Novo método para filtrar por categoria da API
+  void _filterNewsByApiCategory(CategoryItem categoryItem) {
+    setState(() {
+      selectedCategory = categoryItem.name;
+    });
+    
+    if (categoryItem.isAll) {
+      // Se for "Todas", recarregar todas as notícias
+      _loadAllNews();
+    } else {
+      // Filtrar por categoria específica
+      _loadNewsByCategory(categoryItem.id);
+    }
+  }
+
+  // Carregar notícias por categoria específica
+  Future<void> _loadNewsByCategory(int categoryId) async {
+    try {
+      setState(() {
+        isLoadingNews = true;
+      });
+      
+      final news = await ApiService.getNewsByCategory(categoryId);
+      setState(() {
+        apiNews = news;
+        isLoadingNews = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingNews = false;
+      });
+      print('Erro ao carregar notícias por categoria: $e');
+    }
+  }
+
+  // Obter contagem de notícias por categoria (simulado por agora)
+  int _getCategoryNewsCount(int categoryId) {
+    if (categoryId == 0) return apiNews.length; // "Todas"
+    
+    // Contar notícias que pertencem à categoria
+    // Por agora, retorna um número simulado
+    return (categoryId % 5) + 3; // Simula entre 3-7 notícias por categoria
+  }
+
+  // Mostrar modal com todas as categorias
+  void _showAllCategories() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle do modal
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Título
+            const Text(
+              'Todas as Categorias',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Lista de categorias
+            if (isLoadingCategories)
+              const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFC7A87B),
+                ),
+              )
+            else
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final category = categories[index];
+                    return ListTile(
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC7A87B).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.category,
+                          color: Color(0xFFC7A87B),
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        category.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC7A87B).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${_getCategoryNewsCount(category.id)}',
+                          style: const TextStyle(
+                            color: Color(0xFFC7A87B),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _filterNewsByApiCategory(CategoryItem(
+                          id: category.id,
+                          name: category.name,
+                        ));
+                      },
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildCategoryNews() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 0, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFC7A87B).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.category,
+                    color: Color(0xFFC7A87B),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    selectedCategory,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Voltar para "Todas"
+                    _filterNewsByApiCategory(CategoryItem(
+                      id: 0,
+                      name: "Todas",
+                      isAll: true,
+                    ));
+                  },
+                  child: const Text(
+                    "Ver todas",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFC7A87B),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Loading state
+          if (isLoadingNews)
+            Container(
+              height: 280,
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFC7A87B),
+                ),
+              ),
+            )
+          
+          // Error state
+          else if (apiNews.isEmpty && !isLoadingNews)
+            Container(
+              height: 280,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.article_outlined,
+                      size: 48,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Nenhuma notícia encontrada para esta categoria",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          
+          // Success state with data
+          else
+            SizedBox(
+              height: 280,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(left: 0),
+                itemCount: apiNews.length > 10 ? 10 : apiNews.length,
+                itemBuilder: (context, index) {
+                  return buildApiNewsCard(apiNews[index]);
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -228,10 +506,16 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                 ),
               ),
               
-              // Hot Topics modernizado
+              // Hot Topics modernizado (Categorias da API)
               SliverToBoxAdapter(
                 child: buildModernHotTopics(),
               ),
+              
+              // Notícias da categoria selecionada
+              if (selectedCategory != "All" && selectedCategory != "Todas")
+                SliverToBoxAdapter(
+                  child: buildCategoryNews(),
+                ),
               
               // Seção "Para Você" personalizada
               SliverToBoxAdapter(
@@ -617,7 +901,11 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   }
 
   Widget buildModernHotTopics() {
-    List<String> categories = ["All", "World", "Tech", "Music", "Travel", "Fashion"];
+    // Criar lista de categorias incluindo "Todas" e as categorias da API
+    List<CategoryItem> categoryItems = [
+      CategoryItem(id: 0, name: "Todas", isAll: true),
+      ...categories.map((cat) => CategoryItem(id: cat.id, name: cat.name, isAll: false)),
+    ];
     
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 0, 32),
@@ -642,7 +930,7 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                 ),
                 const SizedBox(width: 12),
                 const Text(
-                  "Hot Topics",
+                  "Categorias",
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -650,66 +938,119 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                   ),
                 ),
                 const Spacer(),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    "Ver todos",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFC7A87B),
+                if (isLoadingCategories)
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC7A87B)),
+                    ),
+                  )
+                else
+                  TextButton(
+                    onPressed: () {
+                      // Ação para ver todas as categorias
+                      _showAllCategories();
+                    },
+                    child: const Text(
+                      "Ver todas",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFC7A87B),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 50,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(left: 0),
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                final isSelected = selectedCategory == category;
-                
-                return GestureDetector(
-                  onTap: () => filterNewsByCategory(category),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.only(right: 12),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                    decoration: BoxDecoration(
-                      gradient: isSelected ? const LinearGradient(
-                        colors: [Color(0xFFC7A87B), Color(0xFF8B5E3C)],
-                      ) : null,
-                      color: isSelected ? null : Colors.white,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: isSelected 
-                              ? const Color(0xFFC7A87B).withOpacity(0.3)
-                              : Colors.black.withOpacity(0.04),
-                          blurRadius: isSelected ? 8 : 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      category,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : const Color(0xFF666666),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+          
+          // Loading state para categorias
+          if (isLoadingCategories)
+            Container(
+              height: 50,
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFC7A87B),
+                ),
+              ),
+            )
+          
+          // Lista de categorias
+          else
+            SizedBox(
+              height: 50,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(left: 0),
+                itemCount: categoryItems.length,
+                itemBuilder: (context, index) {
+                  final categoryItem = categoryItems[index];
+                  final isSelected = selectedCategory == categoryItem.name || 
+                                   (selectedCategory == "All" && categoryItem.isAll);
+                  
+                  return GestureDetector(
+                    onTap: () => _filterNewsByApiCategory(categoryItem),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.only(right: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      decoration: BoxDecoration(
+                        gradient: isSelected ? const LinearGradient(
+                          colors: [Color(0xFFC7A87B), Color(0xFF8B5E3C)],
+                        ) : null,
+                        color: isSelected ? null : Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isSelected 
+                                ? const Color(0xFFC7A87B).withOpacity(0.3)
+                                : Colors.black.withOpacity(0.04),
+                            blurRadius: isSelected ? 8 : 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            categoryItem.name,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : const Color(0xFF666666),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          if (!categoryItem.isAll) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: isSelected 
+                                    ? Colors.white.withOpacity(0.3)
+                                    : const Color(0xFFC7A87B).withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                _getCategoryNewsCount(categoryItem.id).toString(),
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : const Color(0xFFC7A87B),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
     );
