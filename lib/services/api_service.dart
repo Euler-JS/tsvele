@@ -45,7 +45,30 @@ class ApiService {
       throw Exception('Error fetching featured news: $e');
     }
   }
-  
+  // Método que retorna lista simples de notícias
+static Future<List<ApiNewsModel>> getAllNewsSimple({int page = 1, int perPage = 50}) async {
+  try {
+    final response = await http.get(
+      Uri.parse('$baseUrl/news?page=$page&per_page=$perPage'),
+      headers: headers,
+    );
+    
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      
+      if (jsonData['status'] == 'success') {
+        final List<dynamic> newsData = jsonData['data'];
+        return newsData.map((item) => ApiNewsModel.fromJson(item)).toList();
+      } else {
+        throw Exception('API returned error: ${jsonData['message']}');
+      }
+    } else {
+      throw Exception('Failed to load news: ${response.statusCode}');
+    }
+  } catch (e) {
+    throw Exception('Error fetching all news: $e');
+  }
+}
   // Buscar todas as notícias (com paginação)
   static Future<Map<String, dynamic>> getAllNews({
     int page = 1,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:news_app/Model/news_model.dart';
+import 'package:news_app/Model/api_news_model.dart';
+import 'package:news_app/services/api_service.dart';
 import 'package:news_app/news_detail.dart';
 
 class CategoriesPage extends StatefulWidget {
@@ -11,128 +13,277 @@ class CategoriesPage extends StatefulWidget {
 
 class _CategoriesPageState extends State<CategoriesPage> {
   String selectedCategory = "All";
-  List<Yournews> filteredNews = newsItems;
+  int selectedCategoryId = 0;
+  
+  // Dados da API
+  List<CategoryModel> apiCategories = [];
+  List<ApiNewsModel> filteredNews = [];
+  bool isLoadingCategories = true;
+  bool isLoadingNews = true;
+  String? errorMessage;
 
-  // Estatísticas das categorias
-  final Map<String, Map<String, dynamic>> categoryStats = {
-    "All": {
-      "count": newsItems.length,
-      "color": Color(0xFF333333),
-      "icon": Icons.all_inclusive,
-    },
-    "WORLD": {
-      "count": newsItems.where((n) => n.newsCategories == "WORLD").length,
-      "color": Color(0xFF3180FF),
-      "icon": Icons.public,
-    },
-    "TECH": {
-      "count": newsItems.where((n) => n.newsCategories == "TECH").length,
-      "color": Color(0xFFFB3C5F),
-      "icon": Icons.computer,
-    },
-    "MUSIC": {
-      "count": newsItems.where((n) => n.newsCategories == "MUSIC").length,
-      "color": Color(0xFF57CBFF),
-      "icon": Icons.music_note,
-    },
-    "TRAVEL": {
-      "count": newsItems.where((n) => n.newsCategories == "TRAVEL").length,
-      "color": Color(0xFFFF7A23),
-      "icon": Icons.flight,
-    },
-    "FASHION": {
-      "count": newsItems.where((n) => n.newsCategories == "FASHION").length,
-      "color": Color(0xFF8349DF),
-      "icon": Icons.style,
-    },
+  // Mapa de ícones para as categorias (baseado no JSON fornecido)
+  final Map<String, IconData> categoryIcons = {
+    "PESQUISAS": Icons.search,
+    "A TSEVELE": Icons.article,
+    "GALERIA": Icons.photo_library,
+    "Nossas Áreas": Icons.domain,
+    "Videos": Icons.video_library,
+    "Canto e dança tradicionais": Icons.music_note,
+    "Contos": Icons.book,
+    "Gastronomia": Icons.restaurant,
+    "Genérico": Icons.category,
+    "Instrumentos musicais": Icons.piano,
+    "Lugares históricos": Icons.location_city,
+    "Medicina e beleza": Icons.local_hospital,
+    "Monumentos": Icons.account_balance,
+    "Utensílios": Icons.build,
+    "Galeria": Icons.photo,
   };
+
+  // Cores para as categorias
+  final List<Color> categoryColors = [
+    Color(0xFF3180FF),
+    Color(0xFFFB3C5F),
+    Color(0xFF57CBFF),
+    Color(0xFFFF7A23),
+    Color(0xFF8349DF),
+    Color(0xFF00BCD4),
+    Color(0xFF4CAF50),
+    Color(0xFF9C27B0),
+    Color(0xFFFF5722),
+    Color(0xFF607D8B),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _filterNews();
+    _loadCategories();
+    _loadAllNews();
   }
 
+  // Carregar categorias da API
+  Future<void> _loadCategories() async {
+    try {
+      setState(() {
+        isLoadingCategories = true;
+        errorMessage = null;
+      });
+      
+      final categories = await ApiService.getCategories();
+      setState(() {
+        apiCategories = categories;
+        isLoadingCategories = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingCategories = false;
+        errorMessage = e.toString();
+      });
+      print('Erro ao carregar categorias: $e');
+    }
+  }
+
+  // Carregar todas as notícias
+  Future<void> _loadAllNews() async {
+    try {
+      setState(() {
+        isLoadingNews = true;
+        errorMessage = null;
+      });
+      
+      final newsList = await ApiService.getAllNewsSimple(page: 1, perPage: 50);
+      
+      setState(() {
+        filteredNews = newsList;
+        isLoadingNews = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingNews = false;
+        errorMessage = e.toString();
+      });
+      print('Erro ao carregar notícias: $e');
+    }
+  }
+
+  // Filtrar notícias por categoria
   void _filterNews() {
-    setState(() {
-      if (selectedCategory == "All") {
-        filteredNews = newsItems;
-      } else {
-        filteredNews = newsItems.where((news) => 
-          news.newsCategories == selectedCategory
-        ).toList();
-      }
-    });
+    if (selectedCategoryId == 0) {
+      // "All" - mostrar todas as notícias
+      _loadAllNews();
+    } else {
+      // Filtrar por categoria específica
+      _loadNewsByCategory(selectedCategoryId);
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        toolbarHeight: 100,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'Categorias',
-          style: TextStyle(
-            color: Color(0xFF333333),
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
+  // Carregar notícias por categoria específica
+  Future<void> _loadNewsByCategory(int categoryId) async {
+    try {
+      setState(() {
+        isLoadingNews = true;
+        errorMessage = null;
+      });
+      
+      final news = await ApiService.getNewsByCategory(categoryId);
+      setState(() {
+        filteredNews = news;
+        isLoadingNews = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingNews = false;
+        errorMessage = e.toString();
+      });
+      print('Erro ao carregar notícias por categoria: $e');
+    }
+  }
+
+  // Obter ícone para categoria
+  IconData _getCategoryIcon(String categoryName) {
+    return categoryIcons[categoryName] ?? Icons.category;
+  }
+
+  // Obter cor para categoria
+  Color _getCategoryColor(int index) {
+    return categoryColors[index % categoryColors.length];
+  }
+
+  // Contar notícias por categoria
+  int _getNewsCountForCategory(int categoryId) {
+    if (categoryId == 0) return filteredNews.length;
+    return filteredNews.where((news) => news.category?.id == categoryId).length;
+  }
+
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFFFFFFF),
+    body: CustomScrollView(
+      slivers: [
+        // AppBar principal
+        SliverAppBar(
+          backgroundColor: Colors.white,
+          toolbarHeight: 100,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          floating: false,
+          pinned: false,
+          snap: false,
+          title: const Text(
+            'Categorias',
+            style: TextStyle(
+              color: Color(0xFF333333),
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search, color: Color(0xFFC7A87B)),
+              onPressed: _showSearchDialog,
+            ),
+            IconButton(
+              icon: const Icon(Icons.filter_list, color: Color(0xFFC7A87B)),
+              onPressed: _showFilterDialog,
+            ),
+          ],
+        ),
+
+        // Header com estatísticas
+        SliverToBoxAdapter(child: buildStatsHeader()),
+
+        // Seletor de categorias (fixo)
+        SliverAppBar(
+          backgroundColor: Colors.white,
+          elevation: 4,
+          automaticallyImplyLeading: false,
+          floating: false,
+          pinned: true,
+          snap: false,
+          toolbarHeight: 120,
+          flexibleSpace: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: buildCategorySelector(),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.search,
-              color: Color(0xFFC7A87B),
-            ),
-            onPressed: () {
-              // Implementar busca
-              _showSearchDialog();
-            },
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.filter_list,
-              color: Color(0xFFC7A87B),
-            ),
-            onPressed: () {
-              // Implementar filtros
-              _showFilterDialog();
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Header com estatísticas
-          buildStatsHeader(),
-          
-          // Grid de categorias
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20),
-              child: Column(
-                children: [
-                  // Seletor de categorias
-                  buildCategorySelector(),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Lista de notícias filtradas
-                  Expanded(
-                    child: buildNewsList(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+
+        // Lista de notícias
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          sliver: buildSliverNewsList(),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget buildSliverNewsList() {
+  if (isLoadingNews) {
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: 400,
+        child: Center(child: CircularProgressIndicator(color: Color(0xFFC7A87B))),
       ),
     );
   }
+
+  if (errorMessage != null) {
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: 400,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: const Color(0xFF333333).withOpacity(0.5)),
+              const SizedBox(height: 16),
+              Text('Erro ao carregar notícias', style: TextStyle(fontSize: 18, color: const Color(0xFF333333).withOpacity(0.7))),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _filterNews,
+                style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFC7A87B)),
+                child: Text('Tentar novamente', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  if (filteredNews.isEmpty) {
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: 400,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.article_outlined, size: 64, color: const Color(0xFF333333).withOpacity(0.5)),
+              const SizedBox(height: 16),
+              Text('Nenhuma notícia encontrada', style: TextStyle(fontSize: 18, color: const Color(0xFF333333).withOpacity(0.7))),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  return SliverList(
+    delegate: SliverChildBuilderDelegate(
+      (context, index) {
+        final news = filteredNews[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: buildNewsCard(news, index),
+        );
+      },
+      childCount: filteredNews.length,
+    ),
+  );
+}
 
   Widget buildStatsHeader() {
     return Container(
@@ -193,13 +344,13 @@ class _CategoriesPageState extends State<CategoriesPage> {
                 "Notícias",
                 Icons.article,
               ),
-              // _buildStatChip(
-              //   "${categoryStats.keys.length - 1}",
-              //   "Categorias",
-              //   Icons.category,
-              // ),
               _buildStatChip(
-                "${filteredNews.where((n) => n.isPremium).length}",
+                "${apiCategories.length}",
+                "Categorias",
+                Icons.category,
+              ),
+              _buildStatChip(
+                "${filteredNews.where((n) => n.isPremiumContent).length}",
                 "Premium",
                 Icons.workspace_premium,
               ),
@@ -248,20 +399,44 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   Widget buildCategorySelector() {
+    if (isLoadingCategories) {
+      return SizedBox(
+        height: 100,
+        child: Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFFC7A87B),
+          ),
+        ),
+      );
+    }
+
+    // Criar lista com "All" + categorias da API
+    final allCategories = [
+      {'id': 0, 'name': 'Todas', 'isAll': true},
+      ...apiCategories.map((cat) => {
+        'id': cat.id,
+        'name': cat.name,
+        'isAll': false,
+      }),
+    ];
+
     return SizedBox(
       height: 100,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: categoryStats.keys.length,
+        itemCount: allCategories.length,
         itemBuilder: (context, index) {
-          String category = categoryStats.keys.elementAt(index);
-          Map<String, dynamic> stats = categoryStats[category]!;
-          bool isSelected = selectedCategory == category;
+          final category = allCategories[index];
+          final categoryId = category['id'] as int;
+          final categoryName = category['name'] as String;
+          final isAll = category['isAll'] as bool;
+          bool isSelected = selectedCategoryId == categoryId;
 
           return GestureDetector(
             onTap: () {
               setState(() {
-                selectedCategory = category;
+                selectedCategory = categoryName;
+                selectedCategoryId = categoryId;
               });
               _filterNews();
             },
@@ -293,16 +468,18 @@ class _CategoriesPageState extends State<CategoriesPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    stats['icon'],
-                    color: isSelected ? Colors.white : stats['color'],
+                    isAll ? Icons.all_inclusive : _getCategoryIcon(categoryName),
+                    color: isSelected ? Colors.white : _getCategoryColor(index),
                     size: 28,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    category == "All" ? "Todas" : category.toLowerCase(),
+                    isAll ? categoryName : categoryName.length > 8 
+                        ? categoryName.substring(0, 8) + '...'
+                        : categoryName,
                     style: TextStyle(
                       color: isSelected ? Colors.white : const Color(0xFF333333),
-                      fontSize: 12,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
                     textAlign: TextAlign.center,
@@ -313,17 +490,17 @@ class _CategoriesPageState extends State<CategoriesPage> {
                     decoration: BoxDecoration(
                       color: isSelected 
                           ? Colors.white.withOpacity(0.2)
-                          : stats['color'].withOpacity(0.1),
+                          : _getCategoryColor(index).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(
-                      '${stats['count']}',
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : stats['color'],
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    // child: Text(
+                    //   '${_getNewsCountForCategory(categoryId)}',
+                    //   style: TextStyle(
+                    //     color: isSelected ? Colors.white : _getCategoryColor(index),
+                    //     fontSize: 10,
+                    //     fontWeight: FontWeight.bold,
+                    //   ),
+                    // ),
                   ),
                 ],
               ),
@@ -335,6 +512,53 @@ class _CategoriesPageState extends State<CategoriesPage> {
   }
 
   Widget buildNewsList() {
+    if (isLoadingNews) {
+      return Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFFC7A87B),
+        ),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: const Color(0xFF333333).withOpacity(0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Erro ao carregar notícias',
+              style: TextStyle(
+                fontSize: 18,
+                color: const Color(0xFF333333).withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Toque para tentar novamente',
+              style: TextStyle(
+                fontSize: 14,
+                color: const Color(0xFF333333).withOpacity(0.5),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _filterNews,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFC7A87B),
+              ),
+              child: Text('Tentar novamente', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (filteredNews.isEmpty) {
       return Center(
         child: Column(
@@ -375,13 +599,17 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 
-  Widget buildNewsCard(Yournews news, int index) {
+  Widget buildNewsCard(ApiNewsModel news, int index) {
     return GestureDetector(
       onTap: () {
+        // Incrementar visualizações
+        ApiService.incrementViews(news.id);
+        
+        // Navegar para detalhes (você pode precisar adaptar dependendo do DetailNews)
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => DetailNews(news: news),
+            builder: (context) => DetailNews(news: _convertToYournews(news)),
           ),
         );
       },
@@ -416,11 +644,37 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
                     ),
-                    image: DecorationImage(
-                      image: AssetImage(news.newsImage),
-                      fit: BoxFit.cover,
-                    ),
+                    color: Colors.grey[300],
                   ),
+                  child: news.previewImagePath != null && news.previewImage != null
+                      ? ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            topRight: Radius.circular(16),
+                          ),
+                          child: Image.network(
+                            'https://tsevelenews.tsevele.co.mz/uploads/${news.previewImagePath}/${news.previewImage}',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[300],
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  size: 50,
+                                  color: Colors.grey[600],
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      : Container(
+                          color: Colors.grey[300],
+                          child: Icon(
+                            Icons.image,
+                            size: 50,
+                            color: Colors.grey[600],
+                          ),
+                        ),
                 ),
                 
                 // Gradient overlay
@@ -443,28 +697,29 @@ class _CategoriesPageState extends State<CategoriesPage> {
                 ),
                 
                 // Categoria badge
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: news.color.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      news.newsCategories,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                if (news.category != null)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getCategoryColor(index).withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        news.category!.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
                 
                 // Premium badge
-                if (news.isPremium)
+                if (news.isPremiumContent)
                   Positioned(
                     top: 12,
                     right: 12,
@@ -495,31 +750,6 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       ),
                     ),
                   ),
-                
-                // Bookmark button
-                Positioned(
-                  bottom: 12,
-                  right: 12,
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        NewsHelper.toggleBookmark(news);
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Icon(
-                        news.isBookmarked ? Icons.bookmark : Icons.bookmark_outline,
-                        color: const Color(0xFFC7A87B),
-                        size: 16,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
             
@@ -531,7 +761,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                 children: [
                   // Título
                   Text(
-                    news.newsTitle,
+                    news.title,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -546,7 +776,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                   
                   // Descrição
                   Text(
-                    news.description,
+                    news.description.replaceAll(RegExp(r'<[^>]*>'), ''), // Remove HTML tags
                     style: TextStyle(
                       fontSize: 14,
                       color: const Color(0xFF333333).withOpacity(0.7),
@@ -571,7 +801,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${news.views}',
+                            '${news.totalViews}',
                             style: TextStyle(
                               fontSize: 12,
                               color: const Color(0xFF333333).withOpacity(0.6),
@@ -592,7 +822,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            news.time,
+                            _formatDate(news.createdAt),
                             style: TextStyle(
                               fontSize: 12,
                               color: const Color(0xFF333333).withOpacity(0.6),
@@ -603,22 +833,34 @@ class _CategoriesPageState extends State<CategoriesPage> {
                       
                       const Spacer(),
                       
-                      // Posição
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC7A87B).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '#${index + 1}',
-                          style: const TextStyle(
+                      // Audio/Video badges
+                      if (news.isAudio)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFC7A87B).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.audiotrack,
                             color: Color(0xFFC7A87B),
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            size: 12,
                           ),
                         ),
-                      ),
+                      
+                      if (news.isVideo)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFC7A87B).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.play_arrow,
+                            color: Color(0xFFC7A87B),
+                            size: 12,
+                          ),
+                        ),
                     ],
                   ),
                 ],
@@ -630,16 +872,58 @@ class _CategoriesPageState extends State<CategoriesPage> {
     );
   }
 
+  // Método para formatar data
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date).inDays;
+    
+    if (difference == 0) {
+      return 'Hoje';
+    } else if (difference == 1) {
+      return 'Ontem';
+    } else if (difference < 7) {
+      return '${difference}d atrás';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  // Converter ApiNewsModel para Yournews (para compatibilidade com DetailNews)
+  Yournews _convertToYournews(ApiNewsModel apiNews) {
+    return Yournews(
+      image: apiNews.previewImagePath != null && apiNews.previewImage != null
+          ? 'https://tsevelenews.tsevele.co.mz/uploads/${apiNews.previewImagePath}/${apiNews.previewImage}'
+          : 'assets/images/default.jpg',
+      newsImage: apiNews.previewImagePath != null && apiNews.previewImage != null
+          ? 'https://tsevelenews.tsevele.co.mz/uploads/${apiNews.previewImagePath}/${apiNews.previewImage}'
+          : 'assets/images/default.jpg',
+      newsTitle: apiNews.title,
+      newsCategories: apiNews.category?.name ?? 'Geral',
+      description: apiNews.description.replaceAll(RegExp(r'<[^>]*>'), ''),
+      fullContent: apiNews.description.replaceAll(RegExp(r'<[^>]*>'), ''),
+      time: _formatDate(apiNews.createdAt),
+      date: '${apiNews.createdAt.day}/${apiNews.createdAt.month}/${apiNews.createdAt.year}',
+      views: apiNews.totalViews,
+      isPremium: apiNews.isPremiumContent,
+      color: _getCategoryColor(0),
+      isBookmarked: false,
+      isFeatured: false,
+    );
+  }
+
   void _showSearchDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Buscar Notícias'),
-        content: const TextField(
-          decoration: InputDecoration(
+        content: TextField(
+          decoration: const InputDecoration(
             hintText: 'Digite sua busca...',
             border: OutlineInputBorder(),
           ),
+          onChanged: (value) {
+            // TODO: Implementar busca
+          },
         ),
         actions: [
           TextButton(
@@ -660,23 +944,29 @@ class _CategoriesPageState extends State<CategoriesPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Filtros'),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             CheckboxListTile(
-              title: Text('Apenas Premium'),
+              title: const Text('Apenas Premium'),
               value: false,
-              onChanged: null,
+              onChanged: (value) {
+                // TODO: Implementar filtro premium
+              },
             ),
             CheckboxListTile(
-              title: Text('Mais Recentes'),
+              title: const Text('Mais Recentes'),
               value: true,
-              onChanged: null,
+              onChanged: (value) {
+                // TODO: Implementar filtro por data
+              },
             ),
             CheckboxListTile(
-              title: Text('Mais Visualizadas'),
+              title: const Text('Mais Visualizadas'),
               value: false,
-              onChanged: null,
+              onChanged: (value) {
+                // TODO: Implementar filtro por visualizações
+              },
             ),
           ],
         ),
