@@ -147,10 +147,35 @@ class _DetailNewsState extends State<DetailNews> {
           fit: StackFit.expand,
           children: [
             // Imagem de fundo
-            Image.asset(
-              widget.news.newsImage,
-              fit: BoxFit.cover,
-            ),
+            widget.news.newsImage.startsWith('http') 
+              ? Image.network(
+                  widget.news.newsImage,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey.shade300,
+                      child: Icon(
+                        Icons.image,
+                        size: 64,
+                        color: Colors.grey.shade600,
+                      ),
+                    );
+                  },
+                )
+              : Image.asset(
+                  widget.news.newsImage,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey.shade300,
+                      child: Icon(
+                        Icons.image,
+                        size: 64,
+                        color: Colors.grey.shade600,
+                      ),
+                    );
+                  },
+                ),
             
             // Gradient overlay
             Container(
