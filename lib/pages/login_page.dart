@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:news_app/main_navigation.dart';
 import 'signup_page.dart';
+import '../services/auth_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   bool _rememberMe = false;
+  final AuthProvider _authProvider = AuthProvider();
 
   @override
   void dispose() {
@@ -512,29 +514,56 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = true;
       });
 
-      // Simular processo de login
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
-        // Mostrar sucesso e navegar
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login realizado com sucesso!'),
-            backgroundColor: Color(0xFFC7A87B),
-          ),
+      try {
+        final success = await _authProvider.login(
+          login: _emailController.text.trim(),
+          password: _passwordController.text,
         );
 
-        // Navegar para a tela principal
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const MainNavigationPage(),
-          ),
-        );
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          if (success) {
+            // Login realizado com sucesso
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Login realizado com sucesso!'),
+                backgroundColor: Color(0xFFC7A87B),
+              ),
+            );
+
+            // Navegar para a tela principal
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MainNavigationPage(),
+              ),
+            );
+          } else {
+            // Mostrar erro
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(_authProvider.errorMessage ?? 'Erro no login'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro de conexão: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
@@ -557,6 +586,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _forgotPassword() {
+    final emailController = TextEditingController();
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -571,15 +602,17 @@ class _LoginPageState extends State<LoginPage> {
               color: Color(0xFF2D3748),
             ),
           ),
-          content: const Column(
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              const Text(
                 'Digite seu email para receber um link de recuperação de senha.',
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextField(
-                decoration: InputDecoration(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
                   hintText: 'seu.email@exemplo.com',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email_outlined),
@@ -596,14 +629,37 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Link de recuperação enviado!'),
-                    backgroundColor: Color(0xFFC7A87B),
-                  ),
-                );
+              onPressed: () async {
+                final email = emailController.text.trim();
+                if (email.isNotEmpty) {
+                  Navigator.pop(context);
+                  
+                  // Mostrar loading
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                  
+                  final success = await _authProvider.forgotPassword(email);
+                  
+                  if (mounted) {
+                    Navigator.pop(context); // Fechar loading
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          success 
+                            ? 'Link de recuperação enviado!'
+                            : _authProvider.errorMessage ?? 'Erro ao enviar email'
+                        ),
+                        backgroundColor: success ? const Color(0xFFC7A87B) : Colors.red,
+                      ),
+                    );
+                  }
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFC7A87B),

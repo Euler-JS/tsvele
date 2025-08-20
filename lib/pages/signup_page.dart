@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:news_app/main_navigation.dart';
 import 'login_page.dart';
+import '../services/auth_provider.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -11,6 +12,7 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
@@ -20,11 +22,12 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
   bool _acceptTerms = false;
-  bool _receiveNewsletter = true;
+  final AuthProvider _authProvider = AuthProvider();
 
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -134,6 +137,27 @@ class _SignUpPageState extends State<SignUpPage> {
                             ),
                             
                             const SizedBox(height: 20),
+
+                            // Campo Username
+                            _buildTextField(
+                              controller: _usernameController,
+                              hintText: 'Nome de usuário',
+                              prefixIcon: Icons.alternate_email,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Por favor, insira um nome de usuário';
+                                }
+                                if (value.length < 3) {
+                                  return 'Nome de usuário deve ter pelo menos 3 caracteres';
+                                }
+                                if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+                                  return 'Nome de usuário pode conter apenas letras, números e _';
+                                }
+                                return null;
+                              },
+                            ),
+                            
+                            const SizedBox(height: 20),
                             
                             // Campo Email
                             _buildTextField(
@@ -173,6 +197,11 @@ class _SignUpPageState extends State<SignUpPage> {
                                 return null;
                               },
                             ),
+                            
+                            const SizedBox(height: 20),
+
+                            // Campo Confirmar Password
+                            _buildConfirmPasswordField(),
                             
                             const SizedBox(height: 24),
                             
@@ -433,6 +462,67 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
+  Widget _buildConfirmPasswordField() {
+    return TextFormField(
+      controller: _confirmPasswordController,
+      obscureText: !_isConfirmPasswordVisible,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Por favor, confirme sua senha';
+        }
+        if (value != _passwordController.text) {
+          return 'As senhas não coincidem';
+        }
+        return null;
+      },
+      decoration: InputDecoration(
+        hintText: 'Confirmar Password',
+        hintStyle: const TextStyle(
+          color: Color(0xFFA0AEC0),
+          fontSize: 16,
+        ),
+        prefixIcon: const Icon(
+          Icons.lock_outline,
+          color: Color(0xFFC7A87B),
+          size: 22,
+        ),
+        suffixIcon: GestureDetector(
+          onTap: () {
+            setState(() {
+              _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+            });
+          },
+          child: Icon(
+            _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
+            color: const Color(0xFFA0AEC0),
+            size: 22,
+          ),
+        ),
+        filled: true,
+        fillColor: const Color(0xFFF7FAFC),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: Color(0xFFC7A87B),
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: Colors.red,
+            width: 2,
+          ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      ),
+    );
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String hintText,
@@ -533,29 +623,67 @@ class _SignUpPageState extends State<SignUpPage> {
         _isLoading = true;
       });
 
-      // Simular processo de cadastro
-      await Future.delayed(const Duration(seconds: 3));
+      try {
+        // Separar nome completo em primeiro e último nome
+        final nameParts = _nameController.text.trim().split(' ');
+        final firstname = nameParts.first;
+        final lastname = nameParts.length > 1 
+            ? nameParts.sublist(1).join(' ') 
+            : '';
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
-        // Mostrar sucesso e navegar
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Conta criada com sucesso! Bem-vindo!'),
-            backgroundColor: Color(0xFFC7A87B),
-          ),
+        final success = await _authProvider.register(
+          email: _emailController.text.trim(),
+          username: _usernameController.text.trim(),
+          password: _passwordController.text,
+          passwordConfirmation: _confirmPasswordController.text,
+          firstname: firstname,
+          lastname: lastname.isNotEmpty ? lastname : null,
         );
 
-        // Navegar para a tela principal
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const MainNavigationPage(),
-          ),
-        );
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          if (success) {
+            // Registro realizado com sucesso
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Conta criada com sucesso! Bem-vindo!'),
+                backgroundColor: Color(0xFFC7A87B),
+              ),
+            );
+
+            // Navegar para a tela principal
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MainNavigationPage(),
+              ),
+            );
+          } else {
+            // Mostrar erro
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(_authProvider.errorMessage ?? 'Erro no registro'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro de conexão: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } else if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
