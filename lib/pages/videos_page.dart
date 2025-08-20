@@ -148,60 +148,83 @@ class _VideosPageState extends State<VideosPage> {
     return filtered;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        toolbarHeight: 100,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'Vídeos',
-          style: TextStyle(
-            color: Color(0xFF333333),
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFFFFFFF),
+    body: CustomScrollView(
+      slivers: [
+        // AppBar principal
+        SliverAppBar(
+          backgroundColor: Colors.white,
+          toolbarHeight: 100,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          floating: false,
+          pinned: false,
+          snap: false,
+          title: const Text(
+            'Vídeos',
+            style: TextStyle(
+              color: Color(0xFF333333),
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search, color: Color(0xFFC7A87B)),
+              onPressed: _showSearchDialog,
+            ),
+            IconButton(
+              icon: const Icon(Icons.video_library, color: Color(0xFFC7A87B)),
+              onPressed: _showMyLibraryDialog,
+            ),
+          ],
+        ),
+
+        // Header com estatísticas
+        SliverToBoxAdapter(child: buildHeader()),
+
+        // Filtros fixos (categorias e filtros)
+        SliverAppBar(
+          backgroundColor: Colors.white,
+          elevation: 4,
+          automaticallyImplyLeading: false,
+          floating: false,
+          pinned: true,
+          snap: false,
+          toolbarHeight: 120,
+          flexibleSpace: Padding(
+            padding: const EdgeInsets.all(10),
+            child: buildFilters(),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.search,
-              color: Color(0xFFC7A87B),
-            ),
-            onPressed: () {
-              _showSearchDialog();
-            },
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.video_library,
-              color: Color(0xFFC7A87B),
-            ),
-            onPressed: () {
-              _showMyLibraryDialog();
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Header com estatísticas
-          buildHeader(),
-          
-          // Filtros
-          buildFilters(),
-          
-          // Lista de vídeos
-          Expanded(
-            child: buildVideosList(),
-          ),
-        ],
-      ),
-    );
-  }
+
+        // Lista de vídeos
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          sliver: buildSliverVideosList(),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget buildSliverVideosList() {
+  return SliverList(
+    delegate: SliverChildBuilderDelegate(
+      (context, index) {
+        final video = filteredVideos[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: buildVideoCard(video),
+        );
+      },
+      childCount: filteredVideos.length,
+    ),
+  );
+}
 
   Widget buildHeader() {
     final liveCount = videos.where((v) => v['isLive']).length;
@@ -374,51 +397,53 @@ class _VideosPageState extends State<VideosPage> {
           ),
         ),
         
-        const SizedBox(height: 16),
+        //Essa seccao é para filtrar dados como mais recentes. etc
+        // const SizedBox(height: 16),
         
         // Filtros de ordenação
-        Container(
-          height: 40,
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: filters.length,
-            itemBuilder: (context, index) {
-              String filter = filters[index];
-              bool isSelected = selectedFilter == filter;
+        // Container(
+        //   height: 40,
+        //   margin: const EdgeInsets.symmetric(horizontal: 20),
+        //   child: ListView.builder(
+        //     scrollDirection: Axis.horizontal,
+        //     itemCount: filters.length,
+        //     itemBuilder: (context, index) {
+        //       String filter = filters[index];
+        //       bool isSelected = selectedFilter == filter;
 
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    selectedFilter = filter;
-                  });
-                },
-                child: Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected 
-                        ? const Color(0xFF8B5E3C) 
-                        : const Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Center(
-                    child: Text(
-                      filter,
-                      style: TextStyle(
-                        color: isSelected 
-                            ? Colors.white 
-                            : const Color(0xFF333333),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+        //       return GestureDetector(
+        //         onTap: () {
+        //           setState(() {
+        //             selectedFilter = filter;
+        //           });
+        //         },
+        //         child: Container(
+        //           margin: const EdgeInsets.only(right: 8),
+        //           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        //           decoration: BoxDecoration(
+        //             color: isSelected 
+        //                 ? const Color(0xFF8B5E3C) 
+        //                 : const Color(0xFFF5F5F5),
+        //             borderRadius: BorderRadius.circular(20),
+        //           ),
+        //           child: Center(
+        //             child: Text(
+        //               filter,
+        //               style: TextStyle(
+        //                 color: isSelected 
+        //                     ? Colors.white 
+        //                     : const Color(0xFF333333),
+        //                 fontWeight: FontWeight.w500,
+        //                 fontSize: 12,
+        //               ),
+        //             ),
+        //           ),
+        //         ),
+        //       );
+        //     },
+        //   ),
+        // ),
+     
       ],
     );
   }
