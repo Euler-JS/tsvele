@@ -97,63 +97,85 @@ class _PodcastsPageState extends State<PodcastsPage> {
     return podcasts.where((p) => p['category'] == selectedCategory).toList();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        toolbarHeight: 100,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'Podcasts',
-          style: TextStyle(
-            color: Color(0xFF333333),
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFFFFFFF),
+    body: CustomScrollView(
+      slivers: [
+        // AppBar principal
+        SliverAppBar(
+          backgroundColor: Colors.white,
+          toolbarHeight: 100,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          floating: false,
+          pinned: false,
+          snap: false,
+          title: const Text(
+            'Podcasts',
+            style: TextStyle(
+              color: Color(0xFF333333),
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search, color: Color(0xFFC7A87B)),
+              onPressed: _showSearchDialog,
+            ),
+            IconButton(
+              icon: const Icon(Icons.playlist_play, color: Color(0xFFC7A87B)),
+              onPressed: _showPlaylistDialog,
+            ),
+          ],
+        ),
+
+        // Header com estatísticas
+        SliverToBoxAdapter(child: buildHeader()),
+
+        // Seletor de categorias fixo
+        SliverAppBar(
+          backgroundColor: Colors.white,
+          elevation: 4,
+          automaticallyImplyLeading: false,
+          floating: false,
+          pinned: true,
+          snap: false,
+          toolbarHeight: 80,
+          flexibleSpace: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            child: buildCategorySelector(),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.search,
-              color: Color(0xFFC7A87B),
-            ),
-            onPressed: () {
-              _showSearchDialog();
-            },
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.playlist_play,
-              color: Color(0xFFC7A87B),
-            ),
-            onPressed: () {
-              _showPlaylistDialog();
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Header com estatísticas
-          buildHeader(),
-          
-          // Categorias
-          buildCategorySelector(),
-          
-          // Lista de podcasts
-          Expanded(
-            child: buildPodcastsList(),
-          ),
-        ],
-      ),
-      
-      // Player fixo na parte inferior
-      bottomSheet: currentPlayingIndex != -1 ? buildMiniPlayer() : null,
-    );
-  }
+
+        // Lista de podcasts
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          sliver: buildSliverPodcastsList(),
+        ),
+      ],
+    ),
+    // Player fixo na parte inferior
+    bottomSheet: currentPlayingIndex != -1 ? buildMiniPlayer() : null,
+  );
+}
+
+Widget buildSliverPodcastsList() {
+  return SliverList(
+    delegate: SliverChildBuilderDelegate(
+      (context, index) {
+        final podcast = filteredPodcasts[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: buildPodcastCard(podcast, index),
+        );
+      },
+      childCount: filteredPodcasts.length,
+    ),
+  );
+}
 
   Widget buildHeader() {
     return Container(
