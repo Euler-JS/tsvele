@@ -3,7 +3,6 @@ import 'package:news_app/news_home_page.dart';
 import 'package:news_app/pages/categories_page.dart';
 import 'package:news_app/pages/podcast_page.dart';
 import 'package:news_app/pages/bookmarks_page.dart';
-import 'package:news_app/pages/videos_page.dart';
 import 'package:news_app/pages/subscription_plans.dart';
 
 class MainNavigationPage extends StatefulWidget {
@@ -21,7 +20,6 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     const CategoriesPage(),
     const PodcastPage(),
     const BookmarksPage(),
-    const VideosPage(),
     const SubscriptionPlansPage(),
   ];
 
@@ -45,11 +43,6 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       icon: Icons.bookmark_outline,
       activeIcon: Icons.bookmark,
       label: 'Bookmarks',
-    ),
-    NavigationItem(
-      icon: Icons.play_circle_outline,
-      activeIcon: Icons.play_circle,
-      label: 'Vídeos',
     ),
     NavigationItem(
       icon: Icons.workspace_premium_outlined,
