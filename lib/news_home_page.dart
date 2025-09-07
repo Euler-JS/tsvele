@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:news_app/Model/news_model.dart';
 import 'package:news_app/Model/api_news_model.dart';
+import 'package:news_app/Model/user_model.dart';
 import 'package:news_app/services/api_service.dart';
+import 'package:news_app/services/auth_service.dart';
 import 'package:news_app/news_detail.dart';
 import 'package:news_app/pages/profile_page.dart';
 
@@ -47,6 +49,9 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   String? errorMessage;
   String? errorMostRead;
   
+  // Dados do usuário
+  UserModel? currentUser;
+  
   // Stats do usuário simulados
   int articlesReadToday = 5;
   int readingStreak = 7;
@@ -74,6 +79,7 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
     _loadAllNews();
     _loadRecentNews();
     _loadMostReadNews();
+    _loadUserData();
   }
 
   @override
@@ -192,6 +198,39 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
         errorMostRead = e.toString();
       });
       print('Erro ao carregar notícias mais lidas: $e');
+    }
+  }
+
+  String get userGreeting {
+    if (currentUser != null) {
+      String name = '';
+      if (currentUser!.firstname != null && currentUser!.firstname!.isNotEmpty) {
+        name = currentUser!.firstname!;
+        if (currentUser!.lastname != null && currentUser!.lastname!.isNotEmpty) {
+          name += ' ${currentUser!.lastname!}';
+        }
+      } else if (currentUser!.username.isNotEmpty) {
+        name = currentUser!.username;
+      } else {
+        name = 'Usuário';
+      }
+      return 'Olá, $name! 👋';
+    }
+    return 'Olá! 👋';
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final user = await AuthService.getStoredUser();
+      setState(() {
+        currentUser = user;
+      });
+    } catch (e) {
+      print('Erro ao carregar dados do usuário: $e');
+      // Se não conseguir carregar o usuário, mantém null
+      setState(() {
+        currentUser = null;
+      });
     }
   }
 
@@ -570,7 +609,7 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Olá, Silva! 👋",
+                      userGreeting,
                       style: TextStyle(
                         fontSize: 16,
                         color: const Color(0xFF666666),
