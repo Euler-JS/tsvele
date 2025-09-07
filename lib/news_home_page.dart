@@ -4,8 +4,10 @@ import 'package:flutter/widgets.dart';
 import 'package:news_app/Model/news_model.dart';
 import 'package:news_app/Model/api_news_model.dart';
 import 'package:news_app/Model/user_model.dart';
+import 'package:news_app/Model/user_stats_model.dart';
 import 'package:news_app/services/api_service.dart';
 import 'package:news_app/services/auth_service.dart';
+import 'package:news_app/services/user_stats_service.dart';
 import 'package:news_app/news_detail.dart';
 import 'package:news_app/pages/profile_page.dart';
 
@@ -51,11 +53,12 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   
   // Dados do usuário
   UserModel? currentUser;
+  UserStats? userStats;
   
-  // Stats do usuário simulados
-  int articlesReadToday = 5;
-  int readingStreak = 7;
-  int totalArticlesRead = 142;
+  // Stats do usuário simulados (removidos - agora usando dados reais)
+  // int articlesReadToday = 5;
+  // int readingStreak = 7;
+  // int totalArticlesRead = 142;
 
   @override
   void initState() {
@@ -201,6 +204,20 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
     }
   }
 
+  // Registrar que o usuário leu um artigo
+  Future<void> _recordArticleRead({String? category}) async {
+    try {
+      final updatedStats = await UserStatsService.recordArticleRead(
+        category: category,
+      );
+      setState(() {
+        userStats = updatedStats;
+      });
+    } catch (e) {
+      print('Erro ao registrar leitura de artigo: $e');
+    }
+  }
+
   String get userGreeting {
     if (currentUser != null) {
       String name = '';
@@ -222,14 +239,17 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   Future<void> _loadUserData() async {
     try {
       final user = await AuthService.getStoredUser();
+      final stats = await UserStatsService.getUserStats();
       setState(() {
         currentUser = user;
+        userStats = stats;
       });
     } catch (e) {
       print('Erro ao carregar dados do usuário: $e');
       // Se não conseguir carregar o usuário, mantém null
       setState(() {
         currentUser = null;
+        userStats = UserStats.empty();
       });
     }
   }
@@ -591,9 +611,8 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
       _loadMostReadNews(),
     ]);
     
-    setState(() {
-      articlesReadToday += 1;
-    });
+    // Recarregar também dados do usuário
+    await _loadUserData();
   }
 
   Widget buildModernHeader() {
@@ -804,21 +823,21 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
             children: [
               Expanded(
                 child: _buildStatItem(
-                  '$articlesReadToday',
+                  '${userStats?.articlesReadToday ?? 0}',
                   'Artigos Lidos',
                   Icons.article,
                 ),
               ),
               Expanded(
                 child: _buildStatItem(
-                  '$readingStreak',
+                  '${userStats?.readingStreak ?? 0}',
                   'Dias Seguidos',
                   Icons.local_fire_department,
                 ),
               ),
               Expanded(
                 child: _buildStatItem(
-                  '$totalArticlesRead',
+                  '${userStats?.totalArticlesRead ?? 0}',
                   'Total Lidos',
                   Icons.library_books,
                 ),
@@ -889,6 +908,9 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
             builder: (context) => DetailNews(news: breakingNews),
           ),
         );
+        
+        // Registrar leitura do artigo
+        _recordArticleRead(category: 'URGENTE');
       },
       child: Container(
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -1378,6 +1400,9 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
             builder: (context) => DetailNews(news: news),
           ),
         );
+        
+        // Registrar leitura do artigo
+        _recordArticleRead(category: news.newsCategories);
       },
       child: Container(
         width: 220,
