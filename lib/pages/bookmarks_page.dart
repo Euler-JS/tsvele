@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:news_app/Model/news_model.dart';
 import 'package:news_app/news_detail.dart';
+import 'package:news_app/services/news_service.dart'; // Importando o novo serviço
 
 class BookmarksPage extends StatefulWidget {
   const BookmarksPage({super.key});
@@ -13,6 +14,7 @@ class _BookmarksPageState extends State<BookmarksPage> {
   List<Yournews> bookmarkedNews = [];
   bool isSelectionMode = false;
   List<Yournews> selectedNews = [];
+  bool isLoading = true; // Flag para mostrar indicador de carregamento
 
   @override
   void initState() {
@@ -20,10 +22,39 @@ class _BookmarksPageState extends State<BookmarksPage> {
     _loadBookmarkedNews();
   }
 
-  void _loadBookmarkedNews() {
+  // Método atualizado para carregar bookmarks da API
+  void _loadBookmarkedNews() async {
     setState(() {
-      bookmarkedNews = NewsHelper.getBookmarkedNews();
+      isLoading = true;
     });
+
+    try {
+      // Usamos o serviço de API para carregar os favoritos
+      final bookmarks = await NewsService.getBookmarkedNews();
+      
+      setState(() {
+        bookmarkedNews = bookmarks;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Erro ao carregar favoritos: $e');
+      
+      // Em caso de erro, tentamos usar os dados locais como fallback
+      final localBookmarks = NewsHelper.getBookmarkedNews();
+      
+      setState(() {
+        bookmarkedNews = localBookmarks;
+        isLoading = false;
+      });
+      
+      // Mostrar mensagem de erro
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Erro ao carregar favoritos. Verifique sua conexão.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _toggleSelectionMode() {
@@ -46,6 +77,9 @@ class _BookmarksPageState extends State<BookmarksPage> {
   }
 
   void _removeSelectedBookmarks() {
+    // Armazenar o número de notícias selecionadas antes de limpar
+    final selectedCount = selectedNews.length;
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -72,20 +106,54 @@ class _BookmarksPageState extends State<BookmarksPage> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
+                
+                // Mostrar indicador de progresso
                 setState(() {
-                  for (var news in selectedNews) {
-                    NewsHelper.toggleBookmark(news);
-                  }
-                  selectedNews.clear();
-                  isSelectionMode = false;
-                  _loadBookmarkedNews();
+                  isLoading = true;
                 });
                 
+                // Lista para acompanhar operações bem-sucedidas
+                int successCount = 0;
+                
+                // Fazer uma cópia da lista para não modificar durante a iteração
+                final newsToRemove = List.from(selectedNews);
+                
+                // Remover cada notícia
+                for (var news in newsToRemove) {
+                  try {
+                    // Usar o serviço da API para remover bookmark
+                    bool success = false;
+                    if (news.id.isNotEmpty) {
+                      success = await NewsService.unbookmarkNews(news.id);
+                    } else {
+                      // Fallback para método local se não tiver ID
+                      NewsHelper.toggleBookmark(news);
+                      success = true;
+                    }
+                    
+                    if (success) {
+                      successCount++;
+                    }
+                  } catch (e) {
+                    print('Erro ao remover notícia dos favoritos: $e');
+                  }
+                }
+                
+                // Limpar seleção e recarregar lista
+                setState(() {
+                  selectedNews.clear();
+                  isSelectionMode = false;
+                });
+                
+                // Recarregar a lista completa
+                _loadBookmarkedNews();
+                
+                // Mostrar feedback ao usuário
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${selectedNews.length} ${selectedNews.length == 1 ? 'notícia removida' : 'notícias removidas'} dos favoritos'),
+                    content: Text('$successCount ${successCount == 1 ? 'notícia removida' : 'notícias removidas'} dos favoritos'),
                     backgroundColor: const Color(0xFFC7A87B),
                   ),
                 );
@@ -166,9 +234,11 @@ class _BookmarksPageState extends State<BookmarksPage> {
           ],
         ],
       ),
-      body: bookmarkedNews.isEmpty 
-          ? _buildEmptyState()
-          : _buildBookmarksList(),
+      body: isLoading 
+          ? _buildLoadingIndicator() 
+          : (bookmarkedNews.isEmpty 
+              ? _buildEmptyState()
+              : _buildBookmarksList()),
       bottomNavigationBar: isSelectionMode && selectedNews.isNotEmpty
           ? Container(
               padding: const EdgeInsets.all(16),
@@ -217,6 +287,28 @@ class _BookmarksPageState extends State<BookmarksPage> {
               ),
             )
           : null,
+    );
+  }
+
+  // Indicador de carregamento
+  Widget _buildLoadingIndicator() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC7A87B)),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Carregando favoritos...',
+            style: TextStyle(
+              color: const Color(0xFF333333).withOpacity(0.7),
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -651,19 +743,60 @@ class _BookmarksPageState extends State<BookmarksPage> {
                                       ),
                                     ),
                                     ElevatedButton(
-                                      onPressed: () {
+                                      onPressed: () async {
                                         Navigator.pop(context);
+                                        
+                                        // Mostrar indicador de progresso
                                         setState(() {
-                                          NewsHelper.toggleBookmark(news);
-                                          _loadBookmarkedNews();
+                                          isLoading = true;
                                         });
                                         
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('Notícia removida dos favoritos'),
-                                            backgroundColor: Color(0xFFC7A87B),
-                                          ),
-                                        );
+                                        try {
+                                          // Usar o serviço da API para remover bookmark
+                                          bool success = false;
+                                          if (news.id.isNotEmpty) {
+                                            success = await NewsService.unbookmarkNews(news.id);
+                                          } else {
+                                            // Fallback para método local se não tiver ID
+                                            NewsHelper.toggleBookmark(news);
+                                            success = true;
+                                          }
+                                          
+                                          if (success) {
+                                            // Recarregar a lista atualizada
+                                            _loadBookmarkedNews();
+                                            
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Notícia removida dos favoritos'),
+                                                backgroundColor: Color(0xFFC7A87B),
+                                              ),
+                                            );
+                                          } else {
+                                            setState(() {
+                                              isLoading = false;
+                                            });
+                                            
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Erro ao remover dos favoritos'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          }
+                                        } catch (e) {
+                                          print('Erro ao remover dos favoritos: $e');
+                                          setState(() {
+                                            isLoading = false;
+                                          });
+                                          
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Erro ao remover dos favoritos'),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.red,

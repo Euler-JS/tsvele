@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:news_app/Model/news_model.dart';
 import 'package:news_app/pages/subscription_plans.dart';
+import 'package:news_app/services/news_service.dart';
 
 class DetailNews extends StatefulWidget {
   const DetailNews({super.key, required this.news});
@@ -108,25 +109,90 @@ class _DetailNewsState extends State<DetailNews> {
               color: Colors.white,
               size: 20,
             ),
-            onPressed: () {
+            onPressed: () async {
+              // Salvar o estado atual para comparação
+              final wasBookmarked = widget.news.isBookmarked;
+              
+              // Mostrar feedback imediato ao usuário (para melhorar UX)
               setState(() {
-                NewsHelper.toggleBookmark(widget.news);
+                widget.news.isBookmarked = !widget.news.isBookmarked;
               });
               
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    widget.news.isBookmarked 
-                        ? "Notícia salva!" 
-                        : "Notícia removida",
+              try {
+                // Log para debug
+                print('Tentando alterar bookmark para notícia ID: ${widget.news.id}');
+                
+                // Usar o serviço da API para alternar bookmark
+                bool success = false;
+                if (widget.news.id.isNotEmpty) {
+                  // Chamar diretamente o NewsService
+                  if (wasBookmarked) {
+                    print('Removendo bookmark para notícia ID: ${widget.news.id}');
+                    success = await NewsService.unbookmarkNews(widget.news.id);
+                  } else {
+                    print('Adicionando bookmark para notícia ID: ${widget.news.id}');
+                    success = await NewsService.bookmarkNews(widget.news.id);
+                  }
+                } else {
+                  // Log para debug
+                  print('ID de notícia vazio, usando NewsHelper local');
+                  
+                  // Fallback para método local se não tiver ID
+                  success = await NewsHelper.toggleBookmark(widget.news);
+                }
+                
+                if (!success) {
+                  // Reverter se a API falhou
+                  setState(() {
+                    widget.news.isBookmarked = wasBookmarked;
+                  });
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text("Erro ao atualizar favorito"),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                } else {
+                  // Mostrar feedback de sucesso
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        widget.news.isBookmarked 
+                            ? "Notícia salva!" 
+                            : "Notícia removida",
+                      ),
+                      backgroundColor: const Color(0xFFC7A87B),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                }
+              } catch (e) {
+                print('Erro ao alternar favorito: $e');
+                
+                // Reverter em caso de erro
+                setState(() {
+                  widget.news.isBookmarked = wasBookmarked;
+                });
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text("Erro ao atualizar favorito"),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  backgroundColor: const Color(0xFFC7A87B),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              );
+                );
+              }
             },
           ),
         ),

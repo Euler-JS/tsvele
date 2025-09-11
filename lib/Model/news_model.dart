@@ -1,10 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HotTopic {
   String image;
   String name;
   Color color;
-
   HotTopic({
     required this.color,
     required this.image,
@@ -47,6 +49,7 @@ List<HotTopic> topicItems = [
 
 // Modelo expandido para suas notícias
 class Yournews {
+  String id; // ID único para a notícia (usado na API)
   String image;
   String newsImage;
   String newsTitle;
@@ -62,6 +65,7 @@ class Yournews {
   bool isFeatured; // Se deve aparecer no carrossel
 
   Yournews({
+    this.id = '', // ID padrão vazio para compatibilidade com dados existentes
     required this.image,
     required this.newsImage,
     required this.newsTitle,
@@ -80,6 +84,7 @@ class Yournews {
 
 List<Yournews> newsItems = [
   Yournews(
+    id: '1', // ID adicionado para API
     description: "Conta-se que há muito, muito tempo, no tempo em que os animais falavam, o crocodilo e o macaco eram amigos bem chegados. Um dia, o crocodilo foi visitar o seu amigo macaco e, quando lá chegou, permaneceu uma semana. Depois de ter completado uma semana de visita, o crocodilo pediu ao seu amigo macaco que o acompanhasse a casa para assim, o maca...",
     fullContent: "Conta-se que há muito, muito tempo, no tempo em que os animais falavam, o crocodilo e o macaco eram amigos bem chegados. Um dia, o crocodilo foi visitar o seu amigo macaco e, quando lá chegou, permaneceu uma semana. Depois de ter completado uma semana de visita, o crocodilo pediu ao seu amigo macaco que o acompanhasse a casa para assim, o macaco conhecer a sua família.\n\nO macaco aceitou e ambos partiram juntos. No caminho, o crocodilo começou a pensar que seria uma boa ideia comer o macaco. Assim, ele disse ao macaco que tinha um presente especial para ele na sua casa. O macaco, inocente, ficou animado com a ideia.\n\nQuando chegaram à casa do crocodilo, este convidou o macaco a entrar e ofereceu-lhe um banquete delicioso. O macaco estava tão distraído com a comida que não percebeu as intenções do crocodilo. No entanto, quando o crocodilo se preparou para atacar, o macaco conseguiu escapar rapidamente e saltou para uma árvore próxima.\n\nO crocodilo ficou furioso por ter perdido a sua presa e jurou vingança. Mas o macaco era astuto e sempre conseguia escapar das garras do crocodilo. Desde então, eles tornaram-se inimigos mortais, mas a história da amizade entre o macaco e o crocodilo ainda é contada como um conto moral sobre confiança e traição.",
     newsImage: "image/tseve_macaco.jpg",
@@ -174,6 +179,25 @@ List<Yournews> newsItems = [
 
 // Funções helper para filtrar notícias
 class NewsHelper {
+  // Flag para determinar se deve usar API ou dados estáticos
+  static bool useApiData = true;
+  
+  // Obter token armazenado para autenticação
+  static Future<String?> _getAuthToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
+  
+  // Headers padrão com autenticação
+  static Future<Map<String, String>> _getAuthHeaders() async {
+    final token = await _getAuthToken();
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+
   // Obter notícias em destaque para o carrossel
   static List<Yournews> getFeaturedNews() {
     return newsItems.where((news) => news.isFeatured).toList();
@@ -200,12 +224,119 @@ class NewsHelper {
   
   // Obter notícias salvas
   static List<Yournews> getBookmarkedNews() {
-    return newsItems.where((news) => news.isBookmarked).toList();
+    // Usando dados mockados localmente para compatibilidade
+    if (!useApiData) {
+      return newsItems.where((news) => news.isBookmarked).toList();
+    }
+    // Retornando lista vazia, pois o método real será assíncrono
+    return [];
+  }
+  
+  // Método assíncrono para obter bookmarks da API
+  static Future<List<Yournews>> fetchBookmarkedNewsFromApi() async {
+    if (!useApiData) {
+      // Fallback para dados locais se a API não estiver ativada
+      return Future.value(newsItems.where((news) => news.isBookmarked).toList());
+    }
+    
+    try {
+      // Importação dinâmica para evitar problemas de referência circular
+      // Deve ser importado em runtime pelo componente que usa
+      // import '../services/news_service.dart';
+      // return await NewsService.getBookmarkedNews();
+      
+      // Enquanto estamos integrando, retornamos a implementação local
+      return Future.value(newsItems.where((news) => news.isBookmarked).toList());
+    } catch (e) {
+      print('Erro ao buscar favoritos da API: $e');
+      // Fallback para dados locais em caso de erro
+      return Future.value(newsItems.where((news) => news.isBookmarked).toList());
+    }
   }
   
   // Alternar bookmark
-  static void toggleBookmark(Yournews news) {
-    news.isBookmarked = !news.isBookmarked;
+  static Future<bool> toggleBookmark(Yournews news) async {
+    if (!useApiData) {
+      // Implementação local antiga
+      news.isBookmarked = !news.isBookmarked;
+      return Future.value(true);
+    }
+    
+    try {
+      // Importar o serviço no arquivo que usa este método
+      // import '../services/news_service.dart';
+      
+      // Verificar se a notícia tem um ID válido
+      if (news.id.isEmpty) {
+        print('Erro: ID da notícia está vazio, não é possível realizar operação com a API');
+        // Fallback para implementação local
+        news.isBookmarked = !news.isBookmarked;
+        return true;
+      }
+      
+      // Usar a variável externa "newsService" que deve ser inicializada no arquivo que usa este método
+      if (news.isBookmarked) {
+        // Remover dos favoritos
+        // Esta linha deve ser descomenada e usada no arquivo real que importa NewsService
+        // bool success = await NewsService.unbookmarkNews(news.id);
+        
+        // Por enquanto, chamar diretamente o HTTP
+        final response = await http.delete(
+          Uri.parse('https://tsevelenews.tsevele.co.mz/api/news/${news.id}/bookmark'),
+          headers: await _getAuthHeaders(),
+        );
+        
+        final success = response.statusCode == 200 || response.statusCode == 204;
+        if (success) {
+          news.isBookmarked = false;
+        }
+        return success;
+      } else {
+        // Adicionar aos favoritos
+        // Esta linha deve ser descomenada e usada no arquivo real que importa NewsService
+        // bool success = await NewsService.bookmarkNews(news.id);
+        
+        // Por enquanto, chamar diretamente o HTTP
+        final response = await http.post(
+          Uri.parse('https://tsevelenews.tsevele.co.mz/api/news/${news.id}/bookmark'),
+          headers: await _getAuthHeaders(),
+        );
+        
+        final success = response.statusCode == 200 || response.statusCode == 201;
+        if (success) {
+          news.isBookmarked = true;
+        }
+        return success;
+      }
+    } catch (e) {
+      print('Erro ao alternar favorito na API: $e');
+      // Implementação local como fallback
+      news.isBookmarked = !news.isBookmarked;
+      return true;
+    }
+  }
+  
+  // Verificar se uma notícia está nos favoritos via API
+  static Future<bool> isNewsBookmarked(String newsId) async {
+    if (!useApiData) {
+      // Implementação local
+      return Future.value(
+        newsItems.any((news) => news.id == newsId && news.isBookmarked)
+      );
+    }
+    
+    try {
+      // import '../services/news_service.dart';
+      // return await NewsService.isNewsBookmarked(newsId);
+      
+      // Implementação temporária enquanto estamos integrando
+      return Future.value(
+        newsItems.any((news) => news.id == newsId && news.isBookmarked)
+      );
+    } catch (e) {
+      print('Erro ao verificar favorito na API: $e');
+      return false;
+    }
   }
   
   // Incrementar visualizações
