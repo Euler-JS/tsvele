@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:news_app/Model/news_model.dart';
 import 'package:news_app/news_detail.dart';
 import 'package:news_app/services/news_service.dart'; // Importando o novo serviço
+import 'package:news_app/main_navigation.dart';
 
 class BookmarksPage extends StatefulWidget {
   const BookmarksPage({super.key});
@@ -77,8 +78,7 @@ class _BookmarksPageState extends State<BookmarksPage> {
   }
 
   void _removeSelectedBookmarks() {
-    // Armazenar o número de notícias selecionadas antes de limpar
-    final selectedCount = selectedNews.length;
+  // Armazenar o número de notícias selecionadas antes de limpar
     
     showDialog(
       context: context,
@@ -183,7 +183,12 @@ class _BookmarksPageState extends State<BookmarksPage> {
             Icons.arrow_back_ios,
             color: Color(0xFF333333),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const MainNavigationPage()),
+              (route) => false,
+            );
+          },
         ),
         title: Text(
           isSelectionMode 
@@ -358,7 +363,15 @@ class _BookmarksPageState extends State<BookmarksPage> {
             const SizedBox(height: 32),
             
             ElevatedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                // Levar o usuário para a tela principal do app e limpar o histórico
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (_) => const MainNavigationPage(),
+                  ),
+                  (route) => false,
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFC7A87B),
                 foregroundColor: Colors.white,

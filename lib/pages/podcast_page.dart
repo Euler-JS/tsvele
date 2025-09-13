@@ -125,89 +125,97 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFC7A87B),
-              Color(0xFF8B5E3C),
-              Color(0xFFC7A87B),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildSearchBar(),
-              _buildTabBar(),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildPodcastsTab(),
-                    _buildCategoriesTab(),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Gradient header card similar to Categories
+            Container(
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFC7A87B),
+                    Color(0xFF8B5E3C),
                   ],
                 ),
+                borderRadius: BorderRadius.circular(16),
               ),
-            ],
-          ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const Expanded(
+                    child: Text(
+                      'Podcasts',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.podcasts,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Search + TabBar area
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  _buildSearchBar(),
+                  const SizedBox(height: 12),
+                  _buildTabBar(),
+                ],
+              ),
+            ),
+
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildPodcastsTab(),
+                  _buildCategoriesTab(),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const Expanded(
-            child: Text(
-              'Podcasts',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.podcasts,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // _buildHeader removed — header content is now rendered inline in build()
 
   Widget _buildSearchBar() {
     return Container(
@@ -256,7 +264,7 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: const Color(0xFFC7A87B),
-        unselectedLabelColor: Colors.white,
+  unselectedLabelColor: const Color(0xFF718096),
         labelStyle: const TextStyle(fontWeight: FontWeight.bold),
         tabs: const [
           Tab(text: 'Todos'),
@@ -269,7 +277,7 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
   Widget _buildPodcastsTab() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+        child: CircularProgressIndicator(color: Color(0xFFC7A87B)),
       );
     }
 
@@ -298,7 +306,7 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
   Widget _buildCategoriesTab() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+        child: CircularProgressIndicator(color: Color(0xFFC7A87B)),
       );
     }
 
@@ -556,14 +564,14 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
             const Icon(
               Icons.podcasts,
               size: 80,
-              color: Colors.white,
+              color: Color(0xFFC7A87B),
             ),
             const SizedBox(height: 20),
             Text(
               message,
               style: const TextStyle(
                 fontSize: 18,
-                color: Colors.white,
+                color: Color(0xFF718096),
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
@@ -578,7 +586,7 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
     return const Padding(
       padding: EdgeInsets.all(16),
       child: Center(
-        child: CircularProgressIndicator(color: Colors.white),
+        child: CircularProgressIndicator(color: Color(0xFFC7A87B)),
       ),
     );
   }

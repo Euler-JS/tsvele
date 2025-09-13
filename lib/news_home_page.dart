@@ -2225,15 +2225,15 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                         ),
                       ),
                       
-                      const Spacer(),
+                      // const Spacer(),
                       
-                      Text(
-                        news.getTimeAgo(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
+                      // Text(
+                      //   news.getTimeAgo(),
+                      //   style: TextStyle(
+                      //     fontSize: 12,
+                      //     color: Colors.grey[600],
+                      //   ),
+                      // ),
                     ],
                   ),
                 ],

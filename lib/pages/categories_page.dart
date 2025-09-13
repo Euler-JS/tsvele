@@ -179,16 +179,16 @@ Widget build(BuildContext context) {
               fontSize: 24,
             ),
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.search, color: Color(0xFFC7A87B)),
-              onPressed: _showSearchDialog,
-            ),
-            IconButton(
-              icon: const Icon(Icons.filter_list, color: Color(0xFFC7A87B)),
-              onPressed: _showFilterDialog,
-            ),
-          ],
+          // actions: [
+          //   IconButton(
+          //     icon: const Icon(Icons.search, color: Color(0xFFC7A87B)),
+          //     onPressed: _showSearchDialog,
+          //   ),
+          //   IconButton(
+          //     icon: const Icon(Icons.filter_list, color: Color(0xFFC7A87B)),
+          //     onPressed: _showFilterDialog,
+          //   ),
+          // ],
         ),
 
         // Header com estatísticas

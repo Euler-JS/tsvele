@@ -122,22 +122,32 @@ class _DetailNewsState extends State<DetailNews> {
                 // Log para debug
                 print('Tentando alterar bookmark para notícia ID: ${widget.news.id}');
                 
+                // Verificar se o ID está vazio ou nulo
+                if (widget.news.id.isEmpty) {
+                  print('ID de notícia vazio, gerando ID temporário baseado no título');
+                  
+                  // Gerar um ID temporário baseado no hash do título para consistência
+                  String tempId = widget.news.newsTitle.hashCode.abs().toString();
+                  widget.news.id = tempId; // Atribuir o ID temporário à notícia
+                  
+                  print('ID temporário gerado: $tempId');
+                }
+                
                 // Usar o serviço da API para alternar bookmark
                 bool success = false;
-                if (widget.news.id.isNotEmpty) {
-                  // Chamar diretamente o NewsService
-                  if (wasBookmarked) {
-                    print('Removendo bookmark para notícia ID: ${widget.news.id}');
-                    success = await NewsService.unbookmarkNews(widget.news.id);
-                  } else {
-                    print('Adicionando bookmark para notícia ID: ${widget.news.id}');
-                    success = await NewsService.bookmarkNews(widget.news.id);
-                  }
+                
+                // Chamar diretamente o NewsService
+                if (wasBookmarked) {
+                  print('Removendo bookmark para notícia ID: ${widget.news.id}');
+                  success = await NewsService.unbookmarkNews(widget.news.id);
                 } else {
-                  // Log para debug
-                  print('ID de notícia vazio, usando NewsHelper local');
-                  
-                  // Fallback para método local se não tiver ID
+                  print('Adicionando bookmark para notícia ID: ${widget.news.id}');
+                  success = await NewsService.bookmarkNews(widget.news.id);
+                }
+                
+                if (!success) {
+                  print('Falha na API, usando NewsHelper local como fallback');
+                  // Se a API falhou, tentar usar o método local como fallback
                   success = await NewsHelper.toggleBookmark(widget.news);
                 }
                 
