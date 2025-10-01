@@ -94,7 +94,7 @@ class _DetailNewsState extends State<DetailNews> {
                   const SizedBox(height: 40),
                   
                   // Seção de comentários
-                  buildCommentsSection(),
+                  // buildCommentsSection(),
                   
                   const SizedBox(height: 100),
                 ],
@@ -687,60 +687,60 @@ class _DetailNewsState extends State<DetailNews> {
         const SizedBox(height: 20),
         
         // Campo de comentário
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey[200]!),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFC7A87B), Color(0xFF8B5E3C)],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Adicione um comentário...',
-                    hintStyle: TextStyle(color: Colors.grey[500]),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFC7A87B),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.send,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ],
-          ),
-        ),
+        // Container(
+        //   padding: const EdgeInsets.all(16),
+        //   decoration: BoxDecoration(
+        //     color: Colors.grey[50],
+        //     borderRadius: BorderRadius.circular(16),
+        //     border: Border.all(color: Colors.grey[200]!),
+        //   ),
+        //   child: Row(
+        //     children: [
+        //       Container(
+        //         width: 40,
+        //         height: 40,
+        //         decoration: BoxDecoration(
+        //           gradient: const LinearGradient(
+        //             colors: [Color(0xFFC7A87B), Color(0xFF8B5E3C)],
+        //           ),
+        //           borderRadius: BorderRadius.circular(20),
+        //         ),
+        //         child: const Icon(
+        //           Icons.person,
+        //           color: Colors.white,
+        //           size: 20,
+        //         ),
+        //       ),
+        //       const SizedBox(width: 12),
+        //       Expanded(
+        //         child: TextField(
+        //           decoration: InputDecoration(
+        //             hintText: 'Adicione um comentário...',
+        //             hintStyle: TextStyle(color: Colors.grey[500]),
+        //             border: InputBorder.none,
+        //           ),
+        //         ),
+        //       ),
+        //       Container(
+        //         padding: const EdgeInsets.all(8),
+        //         decoration: BoxDecoration(
+        //           color: const Color(0xFFC7A87B),
+        //           borderRadius: BorderRadius.circular(8),
+        //         ),
+        //         child: const Icon(
+        //           Icons.send,
+        //           color: Colors.white,
+        //           size: 18,
+        //         ),
+        //       ),
+        //     ],
+        //   ),
+        // ),
         
         const SizedBox(height: 24),
         
         // Comentários exemplo
-        ...List.generate(3, (index) => _buildCommentItem(index)),
+        // ...List.generate(3, (index) => _buildCommentItem(index)),
       ],
     );
   }
