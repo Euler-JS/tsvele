@@ -21,6 +21,19 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
   bool _isFavorite = false;
   bool _isLoading = false;
 
+  // Função para abreviar números grandes
+  String _formatViews(int views) {
+    if (views >= 1000000) {
+      double millions = views / 1000000;
+      return '${millions.toStringAsFixed(millions.truncateToDouble() == millions ? 0 : 1)}M';
+    } else if (views >= 1000) {
+      double thousands = views / 1000;
+      return '${thousands.toStringAsFixed(thousands.truncateToDouble() == thousands ? 0 : 1)}k';
+    } else {
+      return views.toString();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -655,7 +668,7 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
                 child: _buildStatItem(
                   icon: Icons.visibility,
                   label: 'Visualizações',
-                  value: widget.podcast.totalViews.toString(),
+                  value: _formatViews(widget.podcast.totalViews),
                 ),
               ),
               Container(

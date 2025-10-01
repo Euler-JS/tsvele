@@ -19,6 +19,19 @@ class _DetailNewsState extends State<DetailNews> {
   int likeCount = 147;
   int commentCount = 23;
   bool isLoadingBookmark = false;
+
+  // Função para abreviar números grandes
+  String _formatViews(int views) {
+    if (views >= 1000000) {
+      double millions = views / 1000000;
+      return '${millions.toStringAsFixed(millions.truncateToDouble() == millions ? 0 : 1)}M';
+    } else if (views >= 1000) {
+      double thousands = views / 1000;
+      return '${thousands.toStringAsFixed(thousands.truncateToDouble() == thousands ? 0 : 1)}k';
+    } else {
+      return views.toString();
+    }
+  }
   
   @override
   void initState() {
@@ -319,26 +332,38 @@ class _DetailNewsState extends State<DetailNews> {
           ),
         ),
         const SizedBox(width: 12),
-        Icon(
-          Icons.access_time,
-          size: 16,
-          color: Colors.grey[600],
-        ),
-        const SizedBox(width: 4),
-        Text(
-          widget.news.date,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const Spacer(),
-        Text(
-          '${widget.news.time} de leitura',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
+        Expanded(
+          child: Row(
+            children: [
+              Icon(
+                Icons.access_time,
+                size: 16,
+                color: Colors.grey[600],
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  widget.news.date,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  '${widget.news.time} de leitura',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -355,85 +380,112 @@ class _DetailNewsState extends State<DetailNews> {
         height: 1.3,
         letterSpacing: -0.5,
       ),
+      maxLines: 4,
+      overflow: TextOverflow.ellipsis,
     );
   }
 
   Widget buildStatsAndAuthor() {
-    return Row(
+    return Column(
       children: [
-        // Avatar do autor
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFC7A87B), Color(0xFF8B5E3C)],
-            ),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Icon(
-            Icons.person,
-            color: Colors.white,
-            size: 20,
-          ),
-        ),
-        
-        const SizedBox(width: 12),
-        
-        // Info do autor
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Redação Tsevele',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2D3748),
-                ),
-              ),
-              Text(
-                'Jornalista',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-        ),
-        
-        // Estatísticas
+        // Linha do autor
         Row(
           children: [
-            Icon(
-              Icons.visibility,
-              size: 16,
-              color: Colors.grey[600],
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '${widget.news.views}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+            // Avatar do autor
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFC7A87B), Color(0xFF8B5E3C)],
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 20,
               ),
             ),
+            
             const SizedBox(width: 12),
-            Icon(
-              Icons.thumb_up_outlined,
-              size: 16,
-              color: Colors.grey[600],
+            
+            // Info do autor
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Redação Tsevele',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2D3748),
+                    ),
+                  ),
+                  Text(
+                    'Jornalista',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(width: 4),
-            Text(
-              '$likeCount',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+          ],
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Linha das estatísticas
+        Row(
+          children: [
+            Flexible(
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.visibility,
+                    size: 16,
+                    color: Colors.grey[600],
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      _formatViews(widget.news.views),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Flexible(
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.thumb_up_outlined,
+                    size: 16,
+                    color: Colors.grey[600],
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      '$likeCount',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -447,6 +499,7 @@ class _DetailNewsState extends State<DetailNews> {
       children: [
         // Botão Like
         Expanded(
+          flex: 1,
           child: GestureDetector(
             onTap: () {
               setState(() {
@@ -462,6 +515,7 @@ class _DetailNewsState extends State<DetailNews> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
@@ -469,12 +523,15 @@ class _DetailNewsState extends State<DetailNews> {
                     size: 18,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    'Gostei',
-                    style: TextStyle(
-                      color: isLiked ? Colors.white : Colors.grey[600],
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                  Flexible(
+                    child: Text(
+                      'Gostei',
+                      style: TextStyle(
+                        color: isLiked ? Colors.white : Colors.grey[600],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -487,6 +544,7 @@ class _DetailNewsState extends State<DetailNews> {
         
         // Botão Comentários
         Expanded(
+          flex: 1,
           child: GestureDetector(
             onTap: () {
               // Scroll para comentários
@@ -499,6 +557,7 @@ class _DetailNewsState extends State<DetailNews> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     Icons.chat_bubble_outline,
@@ -506,12 +565,15 @@ class _DetailNewsState extends State<DetailNews> {
                     size: 18,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    'Comentar',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                  Flexible(
+                    child: Text(
+                      'Comentar',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

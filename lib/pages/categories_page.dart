@@ -22,6 +22,19 @@ class _CategoriesPageState extends State<CategoriesPage> {
   bool isLoadingNews = true;
   String? errorMessage;
 
+  // Função para abreviar números grandes
+  String _formatViews(int views) {
+    if (views >= 1000000) {
+      double millions = views / 1000000;
+      return '${millions.toStringAsFixed(millions.truncateToDouble() == millions ? 0 : 1)}M';
+    } else if (views >= 1000) {
+      double thousands = views / 1000;
+      return '${thousands.toStringAsFixed(thousands.truncateToDouble() == thousands ? 0 : 1)}k';
+    } else {
+      return views.toString();
+    }
+  }
+
   // Mapa de ícones para as categorias (baseado no JSON fornecido)
   final Map<String, IconData> categoryIcons = {
     "PESQUISAS": Icons.search,
@@ -801,7 +814,7 @@ Widget buildSliverNewsList() {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${news.totalViews}',
+                            _formatViews(news.totalViews),
                             style: TextStyle(
                               fontSize: 12,
                               color: const Color(0xFF333333).withOpacity(0.6),

@@ -19,6 +19,19 @@ class _BookmarksPageState extends State<BookmarksPage>
   List<Yournews> selectedNews = [];
   bool isLoading = true;
 
+  // Função para abreviar números grandes
+  String _formatViews(int views) {
+    if (views >= 1000000) {
+      double millions = views / 1000000;
+      return '${millions.toStringAsFixed(millions.truncateToDouble() == millions ? 0 : 1)}M';
+    } else if (views >= 1000) {
+      double thousands = views / 1000;
+      return '${thousands.toStringAsFixed(thousands.truncateToDouble() == thousands ? 0 : 1)}k';
+    } else {
+      return views.toString();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -769,7 +782,7 @@ class _BookmarksPageState extends State<BookmarksPage>
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${news.views}',
+                            _formatViews(news.views),
                             style: TextStyle(
                               fontSize: 12,
                               color: const Color(0xFF333333).withOpacity(0.6),

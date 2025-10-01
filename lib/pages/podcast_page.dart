@@ -24,6 +24,19 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
+  // Função para abreviar números grandes
+  String _formatViews(int views) {
+    if (views >= 1000000) {
+      double millions = views / 1000000;
+      return '${millions.toStringAsFixed(millions.truncateToDouble() == millions ? 0 : 1)}M';
+    } else if (views >= 1000) {
+      double thousands = views / 1000;
+      return '${thousands.toStringAsFixed(thousands.truncateToDouble() == thousands ? 0 : 1)}k';
+    } else {
+      return views.toString();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -549,7 +562,7 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${podcast.totalViews}',
+                            _formatViews(podcast.totalViews),
                             style: TextStyle(
                               fontSize: 12,
                               color: const Color(0xFF333333).withOpacity(0.6),

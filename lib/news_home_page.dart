@@ -54,6 +54,32 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   // Dados do usuário
   UserModel? currentUser;
   UserStats? userStats;
+
+  // Função para abreviar números grandes
+  String _formatViews(int views) {
+    if (views >= 1000000) {
+      double millions = views / 1000000;
+      return '${millions.toStringAsFixed(millions.truncateToDouble() == millions ? 0 : 1)}M';
+    } else if (views >= 1000) {
+      double thousands = views / 1000;
+      return '${thousands.toStringAsFixed(thousands.truncateToDouble() == thousands ? 0 : 1)}k';
+    } else {
+      return views.toString();
+    }
+  }
+
+  // Função estática para usar em outras classes
+  static String formatViews(int views) {
+    if (views >= 1000000) {
+      double millions = views / 1000000;
+      return '${millions.toStringAsFixed(millions.truncateToDouble() == millions ? 0 : 1)}M';
+    } else if (views >= 1000) {
+      double thousands = views / 1000;
+      return '${thousands.toStringAsFixed(thousands.truncateToDouble() == thousands ? 0 : 1)}k';
+    } else {
+      return views.toString();
+    }
+  }
   
   // Stats do usuário simulados (removidos - agora usando dados reais)
   // int articlesReadToday = 5;
@@ -1569,7 +1595,7 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          "${news.views}",
+                          _formatViews(news.views),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -1840,7 +1866,7 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          "${news.totalViews}",
+                          _formatViews(news.totalViews),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -2012,7 +2038,7 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        "${news.views}",
+                        _formatViews(news.views),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -2217,7 +2243,7 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        "${news.totalViews}",
+                        _formatViews(news.totalViews),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -2615,7 +2641,7 @@ class _EnhancedFeaturedCarouselState extends State<EnhancedFeaturedCarousel> {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    "${news.totalViews}",
+                                    _NewsHomePageState.formatViews(news.totalViews),
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.white.withOpacity(0.8),
