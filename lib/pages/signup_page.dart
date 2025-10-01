@@ -303,39 +303,39 @@ class _SignUpPageState extends State<SignUpPage> {
                             const SizedBox(height: 24),
                             
                             // Divider
-                            const Text(
-                              'Continuar com',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF718096),
-                              ),
-                            ),
+                            // const Text(
+                            //   'Continuar com',
+                            //   style: TextStyle(
+                            //     fontSize: 14,
+                            //     color: Color(0xFF718096),
+                            //   ),
+                            // ),
                             
                             const SizedBox(height: 20),
                             
                             // Botões sociais
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _buildSocialButton(
-                                  icon: Icons.facebook,
-                                  color: const Color(0xFF1877F2),
-                                  onTap: () => _socialSignUp('Facebook'),
-                                ),
-                                const SizedBox(width: 16),
-                                _buildSocialButton(
-                                  icon: Icons.g_translate, // Representando Google
-                                  color: const Color(0xFF4285F4),
-                                  onTap: () => _socialSignUp('Google'),
-                                ),
-                                const SizedBox(width: 16),
-                                _buildSocialButton(
-                                  icon: Icons.apple,
-                                  color: const Color(0xFF000000),
-                                  onTap: () => _socialSignUp('Apple'),
-                                ),
-                              ],
-                            ),
+                            // Row(
+                            //   mainAxisAlignment: MainAxisAlignment.center,
+                            //   children: [
+                            //     _buildSocialButton(
+                            //       icon: Icons.facebook,
+                            //       color: const Color(0xFF1877F2),
+                            //       onTap: () => _socialSignUp('Facebook'),
+                            //     ),
+                            //     const SizedBox(width: 16),
+                            //     _buildSocialButton(
+                            //       icon: Icons.g_translate, // Representando Google
+                            //       color: const Color(0xFF4285F4),
+                            //       onTap: () => _socialSignUp('Google'),
+                            //     ),
+                            //     const SizedBox(width: 16),
+                            //     _buildSocialButton(
+                            //       icon: Icons.apple,
+                            //       color: const Color(0xFF000000),
+                            //       onTap: () => _socialSignUp('Apple'),
+                            //     ),
+                            //   ],
+                            // ),
                             
                             const SizedBox(height: 24),
                             
