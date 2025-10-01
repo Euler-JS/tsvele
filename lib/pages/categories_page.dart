@@ -484,24 +484,24 @@ Widget buildSliverNewsList() {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: isSelected 
-                          ? Colors.white.withOpacity(0.2)
-                          : _getCategoryColor(index).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    // child: Text(
-                    //   '${_getNewsCountForCategory(categoryId)}',
-                    //   style: TextStyle(
-                    //     color: isSelected ? Colors.white : _getCategoryColor(index),
-                    //     fontSize: 10,
-                    //     fontWeight: FontWeight.bold,
-                    //   ),
-                    // ),
-                  ),
+                  // const SizedBox(height: 4),
+                  // Container(
+                  //   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  //   decoration: BoxDecoration(
+                  //     color: isSelected 
+                  //         ? Colors.white.withOpacity(0.2)
+                  //         : _getCategoryColor(index).withOpacity(0.1),
+                  //     borderRadius: BorderRadius.circular(10),
+                  //   ),
+                  //   // child: Text(
+                  //   //   '${_getNewsCountForCategory(categoryId)}',
+                  //   //   style: TextStyle(
+                  //   //     color: isSelected ? Colors.white : _getCategoryColor(index),
+                  //   //     fontSize: 10,
+                  //   //     fontWeight: FontWeight.bold,
+                  //   //   ),
+                  //   // ),
+                  // ),
                 ],
               ),
             ),
