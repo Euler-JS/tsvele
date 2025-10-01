@@ -9,6 +9,8 @@ void main() {
   runApp(const MyApp());
 }
 
+final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -36,6 +38,7 @@ class MyApp extends StatelessWidget {
           seedColor: const Color(0xFFC7A87B),
         ),
       ),
+      navigatorObservers: [routeObserver],
       home: const SplashScreen(), // Tela inicial que determina o fluxo
     );
   }

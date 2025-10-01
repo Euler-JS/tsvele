@@ -49,7 +49,7 @@ List<HotTopic> topicItems = [
 
 // Modelo expandido para suas notícias
 class Yournews {
-  String id; // ID único para a notícia (usado na API)
+  String id; // ID único para a notícia
   String image;
   String newsImage;
   String newsTitle;
@@ -80,6 +80,88 @@ class Yournews {
     this.isBookmarked = false,
     this.isFeatured = false,
   });
+
+  // Método para converter o objeto para Map (JSON)
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'image': image,
+      'newsImage': newsImage,
+      'newsTitle': newsTitle,
+      'newsCategories': newsCategories,
+      'time': time,
+      'date': date,
+      'color': color.value, // Converte Color para int
+      'description': description,
+      'fullContent': fullContent,
+      'isPremium': isPremium,
+      'views': views,
+      'isBookmarked': isBookmarked,
+      'isFeatured': isFeatured,
+    };
+  }
+
+  // Método estático para criar objeto a partir de Map (JSON)
+  static Yournews fromJson(Map<String, dynamic> json) {
+    return Yournews(
+      id: json['id'] ?? '',
+      image: json['image'] ?? '',
+      newsImage: json['newsImage'] ?? '',
+      newsTitle: json['newsTitle'] ?? '',
+      newsCategories: json['newsCategories'] ?? 'GENERAL',
+      time: json['time'] ?? '',
+      date: json['date'] ?? '',
+      color: Color(json['color'] ?? 0xFF333333), // Converte int para Color
+      description: json['description'] ?? '',
+      fullContent: json['fullContent'] ?? '',
+      isPremium: json['isPremium'] ?? false,
+      views: json['views'] ?? 0,
+      isBookmarked: json['isBookmarked'] ?? false,
+      isFeatured: json['isFeatured'] ?? false,
+    );
+  }
+
+  // Método para garantir que a notícia tenha um ID válido
+  void ensureId() {
+    if (id.isEmpty) {
+      id = newsTitle.hashCode.abs().toString();
+    }
+  }
+
+  // Método para criar uma cópia da notícia
+  Yournews copyWith({
+    String? id,
+    String? image,
+    String? newsImage,
+    String? newsTitle,
+    String? newsCategories,
+    String? time,
+    String? date,
+    Color? color,
+    String? description,
+    String? fullContent,
+    bool? isPremium,
+    int? views,
+    bool? isBookmarked,
+    bool? isFeatured,
+  }) {
+    return Yournews(
+      id: id ?? this.id,
+      image: image ?? this.image,
+      newsImage: newsImage ?? this.newsImage,
+      newsTitle: newsTitle ?? this.newsTitle,
+      newsCategories: newsCategories ?? this.newsCategories,
+      time: time ?? this.time,
+      date: date ?? this.date,
+      color: color ?? this.color,
+      description: description ?? this.description,
+      fullContent: fullContent ?? this.fullContent,
+      isPremium: isPremium ?? this.isPremium,
+      views: views ?? this.views,
+      isBookmarked: isBookmarked ?? this.isBookmarked,
+      isFeatured: isFeatured ?? this.isFeatured,
+    );
+  }
 }
 
 List<Yournews> newsItems = [
