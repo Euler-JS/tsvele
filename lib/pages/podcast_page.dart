@@ -122,85 +122,212 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
     await _loadInitialData();
   }
 
+  int get _totalPremiumPodcasts {
+    return _podcasts.where((p) => p.isPremiumContent).length;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        toolbarHeight: 100,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: Color(0xFF333333),
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Podcasts',
-          style: TextStyle(
-            color: Color(0xFF333333),
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.refresh,
-              color: Color(0xFFC7A87B),
-            ),
-            onPressed: () {
-              _loadInitialData();
-            },
-            tooltip: 'Atualizar',
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Search + TabBar area
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  _buildSearchBar(),
-                  const SizedBox(height: 12),
-                  _buildTabBar(),
-                ],
+      backgroundColor: const Color(0xFFFFFFFF),
+      body: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          // AppBar principal
+          SliverAppBar(
+            backgroundColor: Colors.white,
+            toolbarHeight: 100,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            floating: false,
+            pinned: false,
+            snap: false,
+            title: const Text(
+              'Podcasts',
+              style: TextStyle(
+                color: Color(0xFF333333),
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
               ),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(
+                  Icons.refresh,
+                  color: Color(0xFFC7A87B),
+                ),
+                onPressed: _loadInitialData,
+                tooltip: 'Atualizar',
+              ),
+            ],
+          ),
 
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildPodcastsTab(),
-                  _buildCategoriesTab(),
-                ],
-              ),
+          // Header com estatísticas
+          SliverToBoxAdapter(
+            child: _buildStatsHeader(),
+          ),
+
+          // Campo de busca
+          // SliverToBoxAdapter(
+          //   child: Padding(
+          //     padding: const EdgeInsets.symmetric(horizontal: 20),
+          //     child: _buildSearchBar(),
+          //   ),
+          // ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 12),
+          ),
+
+          // TabBar fixo
+          SliverAppBar(
+            backgroundColor: Colors.white,
+            elevation: 4,
+            automaticallyImplyLeading: false,
+            floating: false,
+            pinned: true,
+            snap: false,
+            toolbarHeight: 4,
+            flexibleSpace: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: _buildTabBar(),
             ),
-          ],
-        ),
+          ),
+
+          // Conteúdo das tabs
+          _buildTabContent(),
+        ],
       ),
     );
   }
 
-  // _buildHeader removed — header content is now rendered inline in build()
+  Widget _buildStatsHeader() {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFC7A87B),
+            Color(0xFF8B5E3C),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.podcasts,
+                color: Colors.white,
+                size: 28,
+              ),
+              SizedBox(width: 12),
+              Text(
+                'Descubra Podcasts',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          Text(
+            'Explore podcasts incríveis sobre diversos temas',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 14,
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Estatísticas rápidas
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            children: [
+              _buildStatChip(
+                "${_podcasts.length}",
+                "Podcasts",
+                Icons.podcasts,
+              ),
+              _buildStatChip(
+                "${_categories.length}",
+                "Categorias",
+                Icons.category,
+              ),
+              _buildStatChip(
+                "$_totalPremiumPodcasts",
+                "Premium",
+                Icons.workspace_premium,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatChip(String value, String label, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: Colors.white,
+            size: 16,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildSearchBar() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFC7A87B).withOpacity(0.3),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
@@ -224,7 +351,6 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
 
   Widget _buildTabBar() {
     return Container(
-      margin: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
@@ -237,11 +363,23 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: const Color(0xFFC7A87B),
-  unselectedLabelColor: const Color(0xFF718096),
+        unselectedLabelColor: const Color(0xFF718096),
         labelStyle: const TextStyle(fontWeight: FontWeight.bold),
         tabs: const [
           Tab(text: 'Todos'),
           Tab(text: 'Categorias'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabContent() {
+    return SliverFillRemaining(
+      child: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildPodcastsTab(),
+          _buildCategoriesTab(),
         ],
       ),
     );
@@ -261,8 +399,9 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
     return RefreshIndicator(
       onRefresh: _refresh,
       child: ListView.builder(
-        controller: _scrollController,
         padding: const EdgeInsets.all(20),
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
         itemCount: _podcasts.length + (_hasMoreData ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == _podcasts.length) {
@@ -291,6 +430,8 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
       onRefresh: _refresh,
       child: ListView.builder(
         padding: const EdgeInsets.all(20),
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
         itemCount: _categories.length,
         itemBuilder: (context, index) {
           final category = _categories[index];
@@ -305,12 +446,16 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFC7A87B).withOpacity(0.3),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -318,7 +463,7 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _navigateToPodcastDetail(podcast),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -329,13 +474,13 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
                   height: 80,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    image: DecorationImage(
-                      image: NetworkImage(podcast.previewImageUrl),
-                      fit: BoxFit.cover,
-                      onError: (exception, stackTrace) {
-                        // Handle image loading error
-                      },
-                    ),
+                    image: podcast.previewImageUrl.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(podcast.previewImageUrl),
+                            fit: BoxFit.cover,
+                            onError: (exception, stackTrace) {},
+                          )
+                        : null,
                   ),
                   child: podcast.previewImageUrl.isEmpty
                       ? Container(
@@ -364,7 +509,7 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3748),
+                          color: Color(0xFF333333),
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -383,31 +528,31 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
                       
                       const SizedBox(height: 8),
                       
-                      Text(
-                        podcast.description,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF718096),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      // Text(
+                      //   podcast.description,
+                      //   style: TextStyle(
+                      //     fontSize: 14,
+                      //     color: const Color(0xFF333333).withOpacity(0.7),
+                      //   ),
+                      //   maxLines: 2,
+                      //   overflow: TextOverflow.ellipsis,
+                      // ),
                       
-                      const SizedBox(height: 8),
+                      // const SizedBox(height: 8),
                       
                       Row(
                         children: [
                           Icon(
-                            Icons.remove_red_eye,
-                            size: 16,
-                            color: Colors.grey[600],
+                            Icons.visibility,
+                            size: 14,
+                            color: const Color(0xFF333333).withOpacity(0.6),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             '${podcast.totalViews}',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: const Color(0xFF333333).withOpacity(0.6),
                             ),
                           ),
                           
@@ -415,8 +560,8 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
                           
                           if (podcast.isPremiumContent) ...[
                             const Icon(
-                              Icons.star,
-                              size: 16,
+                              Icons.workspace_premium,
+                              size: 14,
                               color: Color(0xFFC7A87B),
                             ),
                             const SizedBox(width: 4),
@@ -455,12 +600,16 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFC7A87B).withOpacity(0.3),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -468,7 +617,7 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _navigateToCategoryPodcasts(category),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -497,7 +646,7 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3748),
+                          color: Color(0xFF333333),
                         ),
                       ),
                       
@@ -505,18 +654,18 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
                       
                       Text(
                         '${category.totalPodcasts ?? 0} podcasts',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: Color(0xFF718096),
+                          color: const Color(0xFF333333).withOpacity(0.7),
                         ),
                       ),
                     ],
                   ),
                 ),
                 
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios,
-                  color: Color(0xFF718096),
+                  color: const Color(0xFF333333).withOpacity(0.5),
                   size: 16,
                 ),
               ],
@@ -534,17 +683,17 @@ class _PodcastPageState extends State<PodcastPage> with TickerProviderStateMixin
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.podcasts,
               size: 80,
-              color: Color(0xFFC7A87B),
+              color: const Color(0xFF333333).withOpacity(0.5),
             ),
             const SizedBox(height: 20),
             Text(
               message,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
-                color: Color(0xFF718096),
+                color: const Color(0xFF333333).withOpacity(0.7),
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,

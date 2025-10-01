@@ -1,6 +1,7 @@
 // lib/pages/profile_page.dart
 import 'package:flutter/material.dart';
 import '../services/auth_provider.dart';
+import '../Model/user_model.dart';
 import 'login_page.dart';
 import 'edit_profile_page.dart';
 
@@ -12,13 +13,27 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final AuthProvider _authProvider = AuthProvider();
+  final AuthProvider _authProvider = AuthProvider.instance;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _refreshProfile();
+    // Listen for changes in AuthProvider
+    _authProvider.addListener(_onAuthProviderChanged);
+  }
+
+  void _onAuthProviderChanged() {
+    if (mounted) {
+      setState(() {}); // Rebuild the widget when auth state changes
+    }
+  }
+
+  @override
+  void dispose() {
+    _authProvider.removeListener(_onAuthProviderChanged);
+    super.dispose();
   }
 
   Future<void> _refreshProfile() async {
@@ -26,7 +41,11 @@ class _ProfilePageState extends State<ProfilePage> {
       _isLoading = true;
     });
     
-    await _authProvider.refreshUser();
+    try {
+      await _authProvider.refreshUser();
+    } catch (e) {
+      print('Error refreshing profile: $e');
+    }
     
     setState(() {
       _isLoading = false;
@@ -36,28 +55,14 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFC7A87B),
-              Color(0xFF8B5E3C),
-              Color(0xFFC7A87B),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: Colors.white))
-              : _authProvider.isLoggedIn
-                  ? _buildProfileContent()
-                  : _buildLoginPrompt(),
-        ),
-      ),
+      backgroundColor: Colors.white,
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFC7A87B)),
+            )
+          : _authProvider.isLoggedIn
+              ? _buildProfileContent()
+              : _buildLoginPrompt(),
     );
   }
 
@@ -67,67 +72,80 @@ class _ProfilePageState extends State<ProfilePage> {
       return _buildLoginPrompt();
     }
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                const Text(
-                  'Meu Perfil',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: _showEditProfile,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ],
+    return CustomScrollView(
+      slivers: [
+        // AppBar
+        SliverAppBar(
+          backgroundColor: Colors.white,
+          toolbarHeight: 100,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          floating: false,
+          pinned: false,
+          snap: false,
+          title: const Text(
+            'Meu Perfil',
+            style: TextStyle(
+              color: Color(0xFF333333),
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
             ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(
+                Icons.edit,
+                color: Color(0xFFC7A87B),
+              ),
+              onPressed: _showEditProfile,
+              tooltip: 'Editar perfil',
+            ),
+          ],
+        ),
 
-          const SizedBox(height: 20),
+        // Conteúdo
+        SliverToBoxAdapter(
+          child: Column(
+            children: [
+              _buildProfileHeader(user),
+              _buildProfileInfo(user),
+              _buildActionButtons(),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
+  Widget _buildProfileHeader(user) {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFC7A87B),
+            Color(0xFF8B5E3C),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
           // Avatar
           Container(
-            width: 120,
-            height: 120,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white,
+              border: Border.all(
+                color: Colors.white,
+                width: 4,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -138,123 +156,344 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             child: const Icon(
               Icons.person,
-              size: 60,
+              size: 50,
               color: Color(0xFFC7A87B),
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
           // Nome
           Text(
-            user.fullName,
+            _getDisplayName(user),
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
+            textAlign: TextAlign.center,
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
 
           // Username
           Text(
-            '@${user.username}',
+            '@${_getUsername(user)}',
             style: TextStyle(
-              fontSize: 16,
-              color: Colors.white.withOpacity(0.8),
+              fontSize: 15,
+              color: Colors.white.withOpacity(0.9),
             ),
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 16),
 
-          // Informações do perfil
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                _buildInfoItem(
-                  icon: Icons.email_outlined,
-                  label: 'Email',
-                  value: user.email,
-                ),
-                
-                const Divider(height: 40),
-                
-                _buildInfoItem(
-                  icon: Icons.person_outline,
-                  label: 'Nome completo',
-                  value: user.fullName,
-                ),
-                
-                if (user.mobile != null) ...[
-                  const Divider(height: 40),
-                  _buildInfoItem(
-                    icon: Icons.phone_outlined,
-                    label: 'Telefone',
-                    value: user.mobile!,
-                  ),
-                ],
-                
-                if (user.address != null && user.address!.fullAddress.isNotEmpty) ...[
-                  const Divider(height: 40),
-                  _buildInfoItem(
-                    icon: Icons.location_on_outlined,
-                    label: 'Endereço',
-                    value: user.address!.fullAddress,
-                  ),
-                ],
-                
-                const Divider(height: 40),
-                
-                _buildInfoItem(
-                  icon: Icons.calendar_today_outlined,
-                  label: 'Membro desde',
-                  value: _formatDate(user.createdAt),
-                ),
-              ],
-            ),
+          // Stats
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildStatBadge(
+                icon: Icons.article,
+                label: 'Artigos',
+                value: '0',
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.white.withOpacity(0.3),
+              ),
+              _buildStatBadge(
+                icon: Icons.bookmark,
+                label: 'Salvos',
+                value: '0',
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.white.withOpacity(0.3),
+              ),
+              _buildStatBadge(
+                icon: Icons.podcasts,
+                label: 'Podcasts',
+                value: '0',
+              ),
+            ],
           ),
-
-          const SizedBox(height: 20),
-
-          // Ações
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                _buildActionButton(
-                  icon: Icons.lock_outline,
-                  label: 'Alterar Senha',
-                  onTap: _showChangePassword,
-                ),
-                
-                const SizedBox(height: 12),
-                
-                _buildActionButton(
-                  icon: Icons.logout,
-                  label: 'Sair',
-                  onTap: _showLogoutConfirmation,
-                  isDestructive: true,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 40),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatBadge({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          color: Colors.white,
+          size: 24,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.white.withOpacity(0.9),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileInfo(user) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFC7A87B).withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFC7A87B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.info_outline,
+                  color: Color(0xFFC7A87B),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Informações Pessoais',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF333333),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          
+          _buildInfoItem(
+            icon: Icons.email_outlined,
+            label: 'Email',
+            value: user.email,
+          ),
+          
+          const SizedBox(height: 16),
+          
+          _buildInfoItem(
+            icon: Icons.person_outline,
+            label: 'Nome completo',
+            value: _getDisplayName(user),
+          ),
+          
+          if (user.mobile != null) ...[
+            const SizedBox(height: 16),
+            _buildInfoItem(
+              icon: Icons.phone_outlined,
+              label: 'Telefone',
+              value: user.mobile!,
+            ),
+          ],
+          
+          if (user.address != null && user.address!.fullAddress.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildInfoItem(
+              icon: Icons.location_on_outlined,
+              label: 'Endereço',
+              value: user.address!.fullAddress,
+            ),
+          ],
+          
+          const SizedBox(height: 16),
+          
+          _buildInfoItem(
+            icon: Icons.calendar_today_outlined,
+            label: 'Membro desde',
+            value: _formatDate(user.createdAt),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFC7A87B).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            color: const Color(0xFFC7A87B),
+            size: 18,
+          ),
+        ),
+        
+        const SizedBox(width: 12),
+        
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: const Color(0xFF333333).withOpacity(0.6),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Color(0xFF333333),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        children: [
+          _buildActionButton(
+            icon: Icons.lock_outline,
+            label: 'Alterar Senha',
+            onTap: _showChangePassword,
+          ),
+          
+          const SizedBox(height: 12),
+          
+          _buildActionButton(
+            icon: Icons.logout,
+            label: 'Sair',
+            onTap: _showLogoutConfirmation,
+            isDestructive: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDestructive 
+              ? Colors.red.withOpacity(0.3) 
+              : const Color(0xFFC7A87B).withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDestructive 
+                        ? Colors.red.withOpacity(0.1) 
+                        : const Color(0xFFC7A87B).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isDestructive ? Colors.red : const Color(0xFFC7A87B),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDestructive ? Colors.red : const Color(0xFF333333),
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: isDestructive 
+                      ? Colors.red.withOpacity(0.6) 
+                      : const Color(0xFF333333).withOpacity(0.5),
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -266,43 +505,55 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFFC7A87B).withOpacity(0.3),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.person_outline,
-              size: 80,
-              color: Color(0xFFC7A87B),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFC7A87B).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person_outline,
+                size: 60,
+                color: Color(0xFFC7A87B),
+              ),
             ),
             
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             
             const Text(
               'Faça login para ver seu perfil',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2D3748),
+                color: Color(0xFF333333),
               ),
               textAlign: TextAlign.center,
             ),
             
             const SizedBox(height: 12),
             
-            const Text(
+            Text(
               'Entre na sua conta para acessar seu perfil e personalizar sua experiência.',
               style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF718096),
+                fontSize: 15,
+                color: const Color(0xFF333333).withOpacity(0.7),
+                height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
@@ -311,7 +562,7 @@ class _ProfilePageState extends State<ProfilePage> {
             
             SizedBox(
               width: double.infinity,
-              height: 48,
+              height: 50,
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.push(
@@ -327,6 +578,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  elevation: 0,
                 ),
                 child: const Text(
                   'Fazer Login',
@@ -343,131 +595,57 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildInfoItem({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFC7A87B).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            color: const Color(0xFFC7A87B),
-            size: 20,
-          ),
-        ),
-        
-        const SizedBox(width: 16),
-        
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF718096),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF2D3748),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  color: isDestructive ? Colors.red : const Color(0xFFC7A87B),
-                  size: 24,
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isDestructive ? Colors.red : const Color(0xFF2D3748),
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: isDestructive ? Colors.red : const Color(0xFF718096),
-                  size: 16,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   String _formatDate(DateTime date) {
     final months = [
       'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
       'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
     ];
     
-    return '${date.day} de ${months[date.month - 1]} ${date.year}';
+    return '${date.day} de ${months[date.month - 1]}, ${date.year}';
   }
 
-  void _showEditProfile() {
-    Navigator.push(
+  String _getDisplayName(UserModel user) {
+    // Se tem firstname e lastname, usa eles
+    if (user.firstname != null && user.firstname!.isNotEmpty && 
+        user.lastname != null && user.lastname!.isNotEmpty) {
+      return '${user.firstname} ${user.lastname}';
+    }
+    
+    // Se tem apenas firstname, usa ele
+    if (user.firstname != null && user.firstname!.isNotEmpty) {
+      return user.firstname!;
+    }
+    
+    // Se não tem nome, usa username
+    if (user.username.isNotEmpty) {
+      return user.username;
+    }
+    
+    // Se não tem nada, usa email sem @
+    return user.email.split('@')[0];
+  }
+
+  String _getUsername(UserModel user) {
+    if (user.username.isNotEmpty) {
+      return user.username;
+    }
+    
+    // Se não tem username, usa a parte antes do @ do email
+    return user.email.split('@')[0];
+  }
+
+  void _showEditProfile() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const EditProfilePage(),
       ),
-    ).then((_) {
-      // Recarregar dados do perfil quando voltar da edição
-      _refreshProfile();
-    });
+    );
+    
+    // Se voltou da edição, atualizar o perfil
+    if (result == true || result == null) {
+      await _refreshProfile();
+    }
   }
 
   void _showChangePassword() {
@@ -486,12 +664,22 @@ class _ProfilePageState extends State<ProfilePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              title: const Text(
-                'Alterar Senha',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3748),
-                ),
+              title: Row(
+                children: [
+                  const Icon(
+                    Icons.lock_outline,
+                    color: Color(0xFFC7A87B),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Alterar Senha',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF333333),
+                    ),
+                  ),
+                ],
               ),
               content: Form(
                 key: formKey,
@@ -501,10 +689,19 @@ class _ProfilePageState extends State<ProfilePage> {
                     TextFormField(
                       controller: currentPasswordController,
                       obscureText: true,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Senha atual',
-                        prefixIcon: Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFC7A87B),
+                            width: 2,
+                          ),
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -517,10 +714,19 @@ class _ProfilePageState extends State<ProfilePage> {
                     TextFormField(
                       controller: newPasswordController,
                       obscureText: true,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Nova senha',
-                        prefixIcon: Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFC7A87B),
+                            width: 2,
+                          ),
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -536,10 +742,19 @@ class _ProfilePageState extends State<ProfilePage> {
                     TextFormField(
                       controller: confirmPasswordController,
                       obscureText: true,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Confirmar nova senha',
-                        prefixIcon: Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFC7A87B),
+                            width: 2,
+                          ),
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -557,9 +772,11 @@ class _ProfilePageState extends State<ProfilePage> {
               actions: [
                 TextButton(
                   onPressed: isLoading ? null : () => Navigator.pop(context),
-                  child: const Text(
+                  child: Text(
                     'Cancelar',
-                    style: TextStyle(color: Color(0xFF718096)),
+                    style: TextStyle(
+                      color: const Color(0xFF333333).withOpacity(0.6),
+                    ),
                   ),
                 ),
                 ElevatedButton(
@@ -589,6 +806,10 @@ class _ProfilePageState extends State<ProfilePage> {
                               : _authProvider.errorMessage ?? 'Erro ao alterar senha'
                           ),
                           backgroundColor: success ? const Color(0xFFC7A87B) : Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       );
                     }
@@ -596,6 +817,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFC7A87B),
                     foregroundColor: Colors.white,
+                    elevation: 0,
                   ),
                   child: isLoading
                       ? const SizedBox(
@@ -624,22 +846,37 @@ class _ProfilePageState extends State<ProfilePage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          title: const Text(
-            'Sair da conta',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
-            ),
+          title: const Row(
+            children: [
+              Icon(
+                Icons.logout,
+                color: Colors.red,
+                size: 24,
+              ),
+              SizedBox(width: 12),
+              Text(
+                'Sair da conta',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF333333),
+                ),
+              ),
+            ],
           ),
-          content: const Text(
+          content: Text(
             'Tem certeza que deseja sair da sua conta?',
+            style: TextStyle(
+              color: const Color(0xFF333333).withOpacity(0.7),
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
+              child: Text(
                 'Cancelar',
-                style: TextStyle(color: Color(0xFF718096)),
+                style: TextStyle(
+                  color: const Color(0xFF333333).withOpacity(0.6),
+                ),
               ),
             ),
             ElevatedButton(
@@ -650,19 +887,23 @@ class _ProfilePageState extends State<ProfilePage> {
                 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Você saiu da sua conta'),
-                      backgroundColor: Color(0xFFC7A87B),
+                    SnackBar(
+                      content: const Text('Você saiu da sua conta'),
+                      backgroundColor: const Color(0xFFC7A87B),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   );
                   
-                  // Atualizar a tela
                   setState(() {});
                 }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
+                elevation: 0,
               ),
               child: const Text('Sair'),
             ),

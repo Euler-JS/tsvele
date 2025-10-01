@@ -124,7 +124,23 @@ class AuthService {
         final jsonData = json.decode(response.body);
         
         if (jsonData['status'] == 'success') {
-          final user = UserModel.fromJson(jsonData['data']);
+          UserModel user;
+          
+          // Tentar diferentes estruturas de resposta
+          if (jsonData['data'] != null && jsonData['data']['user'] != null) {
+            // Estrutura: { "status": "success", "data": { "user": { "id": 1, "email": "..." } } }
+            user = UserModel.fromJson(jsonData['data']['user']);
+          } else if (jsonData['data'] != null && jsonData['data'] is Map) {
+            // Estrutura: { "status": "success", "data": { "id": 1, "email": "..." } }
+            user = UserModel.fromJson(jsonData['data']);
+          } else if (jsonData['user'] != null) {
+            // Estrutura: { "status": "success", "user": { "id": 1, "email": "..." } }
+            user = UserModel.fromJson(jsonData['user']);
+          } else {
+            // Estrutura: { "status": "success", "id": 1, "email": "..." } (dados diretos)
+            user = UserModel.fromJson(jsonData);
+          }
+          
           await _saveUser(user);
           return user;
         }

@@ -11,7 +11,7 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final AuthProvider _authProvider = AuthProvider();
+  final AuthProvider _authProvider = AuthProvider.instance;
   final _formKey = GlobalKey<FormState>();
   
   // Controllers para dados pessoais
@@ -32,6 +32,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void initState() {
     super.initState();
     _loadUserData();
+    // Listen for changes in AuthProvider
+    _authProvider.addListener(_onAuthProviderChanged);
+  }
+
+  void _onAuthProviderChanged() {
+    if (mounted) {
+      // Recarregar dados se o usuário mudou
+      _loadUserData();
+    }
   }
 
   void _loadUserData() {
@@ -53,6 +62,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   void dispose() {
+    _authProvider.removeListener(_onAuthProviderChanged);
     _firstnameController.dispose();
     _lastnameController.dispose();
     _mobileController.dispose();
@@ -454,7 +464,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 backgroundColor: Color(0xFFC7A87B),
               ),
             );
-            Navigator.pop(context);
+            Navigator.pop(context, true); // Retorna true para indicar sucesso
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

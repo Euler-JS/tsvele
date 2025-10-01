@@ -51,6 +51,10 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
                 : 'Podcast removido dos favoritos'
           ),
           backgroundColor: const Color(0xFFC7A87B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -92,7 +96,7 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
           title: Row(
             children: [
               const Icon(
-                Icons.star,
+                Icons.workspace_premium,
                 color: Color(0xFFC7A87B),
                 size: 28,
               ),
@@ -101,7 +105,7 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
                 'Conteúdo Premium',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3748),
+                  color: Color(0xFF333333),
                 ),
               ),
             ],
@@ -109,14 +113,19 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
           content: Text(
             widget.podcast.premiumMessage ?? 
             'Este é um conteúdo premium. Faça login e assine para ter acesso completo.',
-            style: const TextStyle(fontSize: 16),
+            style: TextStyle(
+              fontSize: 16,
+              color: const Color(0xFF333333).withOpacity(0.7),
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
+              child: Text(
                 'Cancelar',
-                style: TextStyle(color: Color(0xFF718096)),
+                style: TextStyle(
+                  color: const Color(0xFF333333).withOpacity(0.6),
+                ),
               ),
             ),
             ElevatedButton(
@@ -130,6 +139,7 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                elevation: 0,
               ),
               child: const Text('Assinar'),
             ),
@@ -144,225 +154,241 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
   }
 
   String _formatDate(DateTime date) {
-    final months = [
-      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
-    ];
+    final now = DateTime.now();
+    final difference = now.difference(date).inDays;
     
-    return '${date.day} de ${months[date.month - 1]} ${date.year}';
+    if (difference == 0) {
+      return 'Hoje';
+    } else if (difference == 1) {
+      return 'Ontem';
+    } else if (difference < 7) {
+      return '${difference}d atrás';
+    } else if (difference < 30) {
+      return '${(difference / 7).floor()}sem atrás';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFC7A87B),
-              Color(0xFF8B5E3C),
-              Color(0xFFC7A87B),
+      backgroundColor: Colors.white,
+      body: CustomScrollView(
+        slivers: [
+          // AppBar com gradiente
+          SliverAppBar(
+            expandedHeight: 80,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: const Color(0xFFC7A87B),
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFC7A87B),
+                    Color(0xFF8B5E3C),
+                  ],
+                ),
+              ),
+            ),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+            actions: [
+              IconButton(
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Icon(
+                        _isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: Colors.white,
+                      ),
+                onPressed: _isLoading ? null : _toggleFavorite,
+              ),
+              const SizedBox(width: 8),
             ],
           ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
+
+          // Conteúdo
+          SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
-                _buildPodcastInfo(),
+                _buildPodcastHeader(),
                 _buildActionButtons(),
                 _buildDescription(),
-                _buildTags(),
+                if (widget.podcast.tags.isNotEmpty) _buildTags(),
                 _buildStats(),
+                const SizedBox(height: 20),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: _isLoading ? null : _toggleFavorite,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : Icon(
-                      _isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildPodcastInfo() {
+  Widget _buildPodcastHeader() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          // Imagem principal
+          // Imagem do podcast
           Container(
             width: double.infinity,
-            height: 250,
+            height: 280,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              image: widget.podcast.previewImageUrl.isNotEmpty
-                  ? DecorationImage(
-                      image: NetworkImage(widget.podcast.previewImageUrl),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-              color: widget.podcast.previewImageUrl.isEmpty
-                  ? const Color(0xFFC7A87B).withOpacity(0.3)
-                  : null,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFFC7A87B).withOpacity(0.3),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: widget.podcast.previewImageUrl.isEmpty
-                ? const Center(
-                    child: Icon(
-                      Icons.podcasts,
-                      size: 80,
-                      color: Colors.white,
-                    ),
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.7),
-                        ],
-                      ),
-                    ),
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.podcast.title,
-                                    style: const TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    widget.podcast.getCategory.name,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (widget.podcast.isPremiumContent)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFC7A87B),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.star,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Premium',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: widget.podcast.previewImageUrl.isNotEmpty
+                  ? Image.network(
+                      widget.podcast.previewImageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildPlaceholderImage();
+                      },
+                    )
+                  : _buildPlaceholderImage(),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Título e categoria
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.podcast.title,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF333333),
+                        height: 1.3,
                       ),
                     ),
                   ),
+                  if (widget.podcast.isPremiumContent)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC7A87B).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFFC7A87B),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.workspace_premium,
+                            color: Color(0xFFC7A87B),
+                            size: 14,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Premium',
+                            style: TextStyle(
+                              color: Color(0xFFC7A87B),
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFC7A87B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  widget.podcast.getCategory.name,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFFC7A87B),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      color: const Color(0xFFC7A87B).withOpacity(0.1),
+      child: const Center(
+        child: Icon(
+          Icons.podcasts,
+          size: 80,
+          color: Color(0xFFC7A87B),
+        ),
       ),
     );
   }
 
   Widget _buildActionButtons() {
     return Container(
-      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          // Botão de reproduzir completo
+          // Botão principal
           Expanded(
+            flex: 2,
             child: ElevatedButton.icon(
               onPressed: widget.podcast.canPlayFull
                   ? () => _playAudio(widget.podcast.audioUrl ?? widget.podcast.audioLink)
@@ -378,10 +404,11 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
                     ? 'Reproduzir'
                     : widget.podcast.canPlaySample
                         ? 'Amostra'
-                        : 'Premium',
+                        : 'Assinar Premium',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
+                  fontSize: 15,
                 ),
               ),
               style: ElevatedButton.styleFrom(
@@ -390,30 +417,39 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
+                elevation: 0,
               ),
             ),
           ),
           
           if (widget.podcast.canPlaySample && widget.podcast.canPlayFull) ...[
             const SizedBox(width: 12),
-            ElevatedButton.icon(
-              onPressed: () => _playAudio(widget.podcast.audioSampleUrl),
-              icon: const Icon(
-                Icons.hearing,
-                color: Color(0xFFC7A87B),
-              ),
-              label: const Text(
-                'Amostra',
-                style: TextStyle(
+            Expanded(
+              flex: 1,
+              child: OutlinedButton.icon(
+                onPressed: () => _playAudio(widget.podcast.audioSampleUrl),
+                icon: const Icon(
+                  Icons.hearing,
                   color: Color(0xFFC7A87B),
-                  fontWeight: FontWeight.bold,
+                  size: 18,
                 ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                label: const Text(
+                  'Prévia',
+                  style: TextStyle(
+                    color: Color(0xFFC7A87B),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: const BorderSide(
+                    color: Color(0xFFC7A87B),
+                    width: 1.5,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
             ),
@@ -425,36 +461,57 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
 
   Widget _buildDescription() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFC7A87B).withOpacity(0.3),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Descrição',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFC7A87B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.description,
+                  color: Color(0xFFC7A87B),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Descrição',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF333333),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Text(
             widget.podcast.description,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color(0xFF4A5568),
+            style: TextStyle(
+              fontSize: 15,
+              color: const Color(0xFF333333).withOpacity(0.7),
               height: 1.6,
             ),
           ),
@@ -464,41 +521,76 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
   }
 
   Widget _buildTags() {
-    if (widget.podcast.tags.isEmpty) return const SizedBox();
-
     return Container(
-      margin: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFC7A87B).withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Tags',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFC7A87B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.label,
+                  color: Color(0xFFC7A87B),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Tags',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF333333),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: widget.podcast.tags.map((tag) {
               return Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                  horizontal: 12,
+                  vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: const Color(0xFFC7A87B).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFFC7A87B).withOpacity(0.3),
+                    width: 1,
+                  ),
                 ),
                 child: Text(
                   tag.name,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    color: Color(0xFFC7A87B),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               );
@@ -511,46 +603,86 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
 
   Widget _buildStats() {
     return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFC7A87B).withOpacity(0.3),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildStatItem(
-            icon: Icons.remove_red_eye,
-            label: 'Visualizações',
-            value: widget.podcast.totalViews.toString(),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFC7A87B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.analytics,
+                  color: Color(0xFFC7A87B),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Estatísticas',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF333333),
+                ),
+              ),
+            ],
           ),
-          Container(
-            width: 1,
-            height: 40,
-            color: Colors.grey[300],
-          ),
-          _buildStatItem(
-            icon: Icons.comment,
-            label: 'Comentários',
-            value: widget.podcast.totalComments.toString(),
-          ),
-          Container(
-            width: 1,
-            height: 40,
-            color: Colors.grey[300],
-          ),
-          _buildStatItem(
-            icon: Icons.calendar_today,
-            label: 'Publicado',
-            value: _formatDate(widget.podcast.createdAt),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem(
+                  icon: Icons.visibility,
+                  label: 'Visualizações',
+                  value: widget.podcast.totalViews.toString(),
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 50,
+                color: const Color(0xFFC7A87B).withOpacity(0.2),
+              ),
+              Expanded(
+                child: _buildStatItem(
+                  icon: Icons.comment,
+                  label: 'Comentários',
+                  value: widget.podcast.totalComments.toString(),
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 50,
+                color: const Color(0xFFC7A87B).withOpacity(0.2),
+              ),
+              Expanded(
+                child: _buildStatItem(
+                  icon: Icons.access_time,
+                  label: 'Publicado',
+                  value: _formatDate(widget.podcast.createdAt),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -575,16 +707,18 @@ class _PodcastDetailPageState extends State<PodcastDetailPage> {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2D3748),
+            color: Color(0xFF333333),
           ),
+          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFF718096),
+          style: TextStyle(
+            fontSize: 11,
+            color: const Color(0xFF333333).withOpacity(0.6),
           ),
+          textAlign: TextAlign.center,
         ),
       ],
     );

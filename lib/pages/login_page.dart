@@ -18,7 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   bool _rememberMe = false;
-  final AuthProvider _authProvider = AuthProvider();
+  final AuthProvider _authProvider = AuthProvider.instance;
 
   @override
   void dispose() {

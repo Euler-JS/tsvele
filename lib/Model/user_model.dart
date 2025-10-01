@@ -131,13 +131,27 @@ class AuthResponse {
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
+    UserModel? user;
+    String? token;
+
+    // Tentar diferentes estruturas de resposta
+    if (json['data'] != null) {
+      // Estrutura: { "status": "success", "data": { "user": {...}, "token": "..." } }
+      if (json['data']['user'] != null) {
+        user = UserModel.fromJson(json['data']['user']);
+      }
+      token = json['data']['token'];
+    } else if (json['user'] != null) {
+      // Estrutura: { "status": "success", "user": {...}, "token": "..." }
+      user = UserModel.fromJson(json['user']);
+      token = json['token'];
+    }
+
     return AuthResponse(
       success: json['status'] == 'success',
       message: json['message'],
-      user: json['data']?['user'] != null 
-          ? UserModel.fromJson(json['data']['user'])
-          : null,
-      token: json['data']?['token'],
+      user: user,
+      token: token,
       errors: json['errors'],
     );
   }

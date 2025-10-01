@@ -22,7 +22,7 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
   bool _acceptTerms = false;
-  final AuthProvider _authProvider = AuthProvider();
+  final AuthProvider _authProvider = AuthProvider.instance;
 
   @override
   void dispose() {

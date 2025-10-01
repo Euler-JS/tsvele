@@ -9,16 +9,31 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // Singleton pattern
+  static AuthProvider? _instance;
+  
+  // Construtor privado
+  AuthProvider._internal() {
+    _initAuth();
+  }
+  
+  // Factory constructor que retorna a instância singleton
+  factory AuthProvider() {
+    _instance ??= AuthProvider._internal();
+    return _instance!;
+  }
+  
+  // Método estático para obter a instância
+  static AuthProvider get instance {
+    _instance ??= AuthProvider._internal();
+    return _instance!;
+  }
+
   // Getters
   UserModel? get user => _user;
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-
-  // Construtor
-  AuthProvider() {
-    _initAuth();
-  }
 
   // Inicializar estado de autenticação
   Future<void> _initAuth() async {
@@ -123,8 +138,17 @@ class AuthProvider extends ChangeNotifier {
       if (response.success && response.user != null) {
         _user = response.user;
         _isLoggedIn = true;
+        
         _isLoading = false;
         notifyListeners();
+        
+        // Tentar atualizar dados do perfil do servidor
+        try {
+          await refreshUser();
+        } catch (e) {
+          print('Error refreshing user after login: $e');
+        }
+        
         return true;
       } else {
         _errorMessage = response.message ?? 'Credenciais inválidas';
@@ -156,6 +180,11 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = false;
     _errorMessage = null;
     notifyListeners();
+  }
+
+  // Método para resetar a instância (usado principalmente para testes)
+  static void resetInstance() {
+    _instance = null;
   }
 
   // Alterar senha
