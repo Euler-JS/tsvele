@@ -5,6 +5,8 @@ import 'package:news_app/Model/news_model.dart';
 import 'package:news_app/Model/api_news_model.dart';
 import 'package:news_app/Model/user_model.dart';
 import 'package:news_app/Model/user_stats_model.dart';
+import 'package:news_app/pages/all_most_read_news_page.dart';
+import 'package:news_app/pages/all_recent_news_page.dart';
 import 'package:news_app/services/api_service.dart';
 import 'package:news_app/services/auth_service.dart';
 import 'package:news_app/services/user_stats_service.dart';
@@ -1245,7 +1247,14 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                 ),
                 const Spacer(),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AllRecentNewsPage(),
+                      ),
+                    );
+                  },
                   child: const Text(
                     "Ver todas",
                     style: TextStyle(
@@ -1346,7 +1355,14 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
               ),
               const Spacer(),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AllMostReadNewsPage(),
+                      ),
+                    );
+                  },
                 child: const Text(
                   "Ver todas",
                   style: TextStyle(
@@ -2013,46 +2029,63 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                   
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: news.color.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          news.newsCategories,
-                          style: TextStyle(
-                            color: news.color,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: news.color.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            news.newsCategories,
+                            style: TextStyle(
+                              color: news.color,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                       ),
                       
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       
-                      Icon(
-                        Icons.visibility,
-                        size: 14,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatViews(news.views),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.visibility,
+                              size: 14,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                _formatViews(news.views),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       
-                      Text(
-                        news.time,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
+                      Flexible(
+                        child: Text(
+                          news.time,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -2181,22 +2214,24 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
                           news.title,
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF2D3748),
+                            height: 1.3,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (news.isPremiumContent)
+                      if (news.isPremiumContent) ...[
+                        const SizedBox(width: 8),
                         Container(
-                          margin: const EdgeInsets.only(left: 8),
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: const Color(0xFFC7A87B),
@@ -2211,43 +2246,58 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
                             ),
                           ),
                         ),
+                      ],
                     ],
                   ),
                   
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: news.getCategoryColor().withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          news.newsCategories,
-                          style: TextStyle(
-                            color: news.getCategoryColor(),
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: news.getCategoryColor().withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            news.newsCategories,
+                            style: TextStyle(
+                              color: news.getCategoryColor(),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                       ),
                       
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       
-                      Icon(
-                        Icons.visibility,
-                        size: 14,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatViews(news.totalViews),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.visibility,
+                              size: 14,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                _formatViews(news.totalViews),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       
