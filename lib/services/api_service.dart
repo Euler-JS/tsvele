@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:news_app/Model/api_news_model.dart';
+import 'auth_service.dart';
 
 class ApiService {
   static const String baseUrl = 'https://tsevelenews.tsevele.co.mz/api';
@@ -13,7 +14,8 @@ class ApiService {
   };
   
   // Headers com autenticação (quando disponível)
-  static Map<String, String> getAuthHeaders(String? token) {
+  static Future<Map<String, String>> getAuthHeaders() async {
+    final token = await AuthService.getToken();
     final baseHeaders = headers;
     if (token != null) {
       baseHeaders['Authorization'] = 'Bearer $token';

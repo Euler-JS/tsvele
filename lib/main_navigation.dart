@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:news_app/news_home_page.dart';
 import 'package:news_app/pages/categories_page.dart';
-import 'package:news_app/pages/podcast_page.dart';
+import 'package:news_app/pages/podcasts_page.dart';
 import 'package:news_app/pages/bookmarks_page.dart';
-import 'package:news_app/pages/subscription_plans.dart';
+import 'package:news_app/pages/videos_page.dart';
+import 'package:news_app/pages/subscription_plans_new.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
@@ -18,8 +19,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   final List<Widget> _pages = [
     const NewsHomePage(),
     const CategoriesPage(),
-    const PodcastPage(),
+    const PodcastsPage(),
     const BookmarksPage(),
+    // const VideosPage(),
     const SubscriptionPlansPage(),
   ];
 

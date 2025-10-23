@@ -46,21 +46,75 @@ class SubscriptionService {
     }
   }
 
-  // Inicializar pagamento M-Pesa
-  static Future<MpesaPaymentResponse> initializeMpesaPayment({
-    required int planId,
+  // Obter métodos de pagamento disponíveis
+  static Future<PaymentMethodsResponse?> getPaymentMethods() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/subscriptions/payment-methods'),
+        headers: headers,
+      );
+      
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return PaymentMethodsResponse.fromJson(jsonData);
+      } else {
+        print('Error getting payment methods: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error getting payment methods: $e');
+      return null;
+    }
+  }
+
+  // Criar subscrição (primeiro passo)
+  static Future<SubscriptionCreateResponse> createSubscription({
+    required int planType,
+    required int paymentMethodCode,
+    required int methodCode,
+    required String currency,
+  }) async {
+    try {
+      final authHeaders = await getAuthHeaders();
+      
+      final request = SubscriptionRequest(
+        planType: planType,
+        paymentMethodCode: paymentMethodCode,
+        methodCode: methodCode,
+        currency: currency,
+      );
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/subscriptions/subscribe'),
+        headers: authHeaders,
+        body: json.encode(request.toJson()),
+      );
+      
+      final jsonData = json.decode(response.body);
+      return SubscriptionCreateResponse.fromJson(jsonData);
+      
+    } catch (e) {
+      return SubscriptionCreateResponse(
+        status: 'error',
+        message: 'Erro de conexão: $e',
+      );
+    }
+  }
+
+  // Processar pagamento M-Pesa (segundo passo)
+  static Future<MpesaPaymentResponse> processMpesaPayment({
+    required int depositId,
     required String phoneNumber,
   }) async {
     try {
       final authHeaders = await getAuthHeaders();
       
       final request = MpesaPaymentRequest(
-        planType: planId,
         phoneNumber: phoneNumber,
       );
       
       final response = await http.post(
-        Uri.parse('$baseUrl/payment/mpesa/initialize'),
+        Uri.parse('$baseUrl/payments/process-mpesa/$depositId'),
         headers: authHeaders,
         body: json.encode(request.toJson()),
       );
@@ -76,24 +130,26 @@ class SubscriptionService {
     }
   }
 
-  // Verificar status do pagamento (se necessário)
-  static Future<MpesaPaymentResponse> checkPaymentStatus(String transactionId) async {
+  // Verificar status da subscrição do usuário
+  static Future<SubscriptionStatusResponse?> getUserSubscriptionStatus() async {
     try {
       final authHeaders = await getAuthHeaders();
       
       final response = await http.get(
-        Uri.parse('$baseUrl/payment/mpesa/status/$transactionId'),
+        Uri.parse('$baseUrl/subscriptions/status'),
         headers: authHeaders,
       );
       
-      final jsonData = json.decode(response.body);
-      return MpesaPaymentResponse.fromJson(jsonData);
-      
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return SubscriptionStatusResponse.fromJson(jsonData);
+      } else {
+        print('Error getting subscription status: ${response.statusCode}');
+        return null;
+      }
     } catch (e) {
-      return MpesaPaymentResponse(
-        status: 'error',
-        message: 'Erro ao verificar status: $e',
-      );
+      print('Error getting subscription status: $e');
+      return null;
     }
   }
 

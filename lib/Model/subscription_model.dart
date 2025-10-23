@@ -139,19 +139,90 @@ class SubscriptionPlansResponse {
   bool get isSuccess => status == 'success';
 }
 
-// Modelo para pagamento M-Pesa
-class MpesaPaymentRequest {
+// Modelo para criar subscrição
+class SubscriptionRequest {
   final int planType;
-  final String phoneNumber;
+  final int paymentMethodCode;
+  final int methodCode;
+  final String currency;
 
-  MpesaPaymentRequest({
+  SubscriptionRequest({
     required this.planType,
-    required this.phoneNumber,
+    required this.paymentMethodCode,
+    required this.methodCode,
+    required this.currency,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'plan_type': planType,
+      'payment_method_code': paymentMethodCode,
+      'method_code': methodCode,
+      'currency': currency,
+    };
+  }
+}
+
+class SubscriptionCreateResponse {
+  final String status;
+  final SubscriptionDepositData? data;
+  final String message;
+
+  SubscriptionCreateResponse({
+    required this.status,
+    this.data,
+    required this.message,
+  });
+
+  factory SubscriptionCreateResponse.fromJson(Map<String, dynamic> json) {
+    return SubscriptionCreateResponse(
+      status: json['status'] ?? '',
+      data: json['data'] != null 
+          ? SubscriptionDepositData.fromJson(json['data']) 
+          : null,
+      message: json['message'] ?? '',
+    );
+  }
+
+  bool get isSuccess => status == 'success';
+}
+
+class SubscriptionDepositData {
+  final int depositId;
+  final String transactionId;
+  final double amount;
+  final int status;
+  final String planName;
+
+  SubscriptionDepositData({
+    required this.depositId,
+    required this.transactionId,
+    required this.amount,
+    required this.status,
+    required this.planName,
+  });
+
+  factory SubscriptionDepositData.fromJson(Map<String, dynamic> json) {
+    return SubscriptionDepositData(
+      depositId: json['deposit_id'] ?? 0,
+      transactionId: json['transaction_id'] ?? '',
+      amount: PaymentMethod._parseDouble(json['amount']) ?? 0.0,
+      status: json['status'] ?? 0,
+      planName: json['plan_name'] ?? '',
+    );
+  }
+}
+
+// Modelo para pagamento M-Pesa
+class MpesaPaymentRequest {
+  final String phoneNumber;
+
+  MpesaPaymentRequest({
+    required this.phoneNumber,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
       'phone_number': phoneNumber,
     };
   }
@@ -159,27 +230,57 @@ class MpesaPaymentRequest {
 
 class MpesaPaymentResponse {
   final String status;
-  final Map<String, dynamic>? data;
+  final MpesaPaymentData? data;
   final String message;
-  final List<String>? errors;
 
   MpesaPaymentResponse({
     required this.status,
     this.data,
     required this.message,
-    this.errors,
   });
 
   factory MpesaPaymentResponse.fromJson(Map<String, dynamic> json) {
     return MpesaPaymentResponse(
       status: json['status'] ?? '',
-      data: json['data'],
+      data: json['data'] != null 
+          ? MpesaPaymentData.fromJson(json['data']) 
+          : null,
       message: json['message'] ?? '',
-      errors: (json['errors'] as List<dynamic>?)?.cast<String>(),
     );
   }
 
   bool get isSuccess => status == 'success';
+}
+
+class MpesaPaymentData {
+  final int depositId;
+  final String transactionId;
+  final String amount;
+  final String finalAmount;
+  final String mpesaReference;
+  final String status;
+
+  MpesaPaymentData({
+    required this.depositId,
+    required this.transactionId,
+    required this.amount,
+    required this.finalAmount,
+    required this.mpesaReference,
+    required this.status,
+  });
+
+  factory MpesaPaymentData.fromJson(Map<String, dynamic> json) {
+    return MpesaPaymentData(
+      depositId: json['deposit_id'] ?? 0,
+      transactionId: json['transaction_id'] ?? '',
+      amount: json['amount']?.toString() ?? '0',
+      finalAmount: json['final_amount']?.toString() ?? '0',
+      mpesaReference: json['mpesa_reference'] ?? '',
+      status: json['status'] ?? '',
+    );
+  }
+
+  bool get isCompleted => status == 'completed';
 }
 
 // Modelo para histórico de assinaturas do usuário
@@ -232,4 +333,169 @@ class UserSubscription {
   }
 
   String get formattedAmount => 'MT ${amount.toStringAsFixed(2)}';
+}
+
+// Modelo para métodos de pagamento
+class PaymentMethod {
+  final int methodCode;
+  final String methodName;
+  final String currency;
+  final String symbol;
+  final double minAmount;
+  final double maxAmount;
+  final double fixedCharge;
+  final double percentCharge;
+  final double rate;
+  final String? image;
+
+  PaymentMethod({
+    required this.methodCode,
+    required this.methodName,
+    required this.currency,
+    required this.symbol,
+    required this.minAmount,
+    required this.maxAmount,
+    required this.fixedCharge,
+    required this.percentCharge,
+    required this.rate,
+    this.image,
+  });
+
+  factory PaymentMethod.fromJson(Map<String, dynamic> json) {
+    return PaymentMethod(
+      methodCode: json['method_code'] ?? 0,
+      methodName: json['method_name'] ?? '',
+      currency: json['currency'] ?? '',
+      symbol: json['symbol'] ?? '',
+      minAmount: _parseDouble(json['min_amount']) ?? 0.0,
+      maxAmount: _parseDouble(json['max_amount']) ?? 0.0,
+      fixedCharge: _parseDouble(json['fixed_charge']) ?? 0.0,
+      percentCharge: _parseDouble(json['percent_charge']) ?? 0.0,
+      rate: _parseDouble(json['rate']) ?? 1.0,
+      image: json['image'],
+    );
+  }
+
+  // Função auxiliar para converter qualquer valor para double
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      try {
+        return double.parse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+}
+
+class PaymentMethodsResponse {
+  final String status;
+  final List<PaymentMethod> data;
+  final String message;
+
+  PaymentMethodsResponse({
+    required this.status,
+    required this.data,
+    required this.message,
+  });
+
+  factory PaymentMethodsResponse.fromJson(Map<String, dynamic> json) {
+    return PaymentMethodsResponse(
+      status: json['status'] ?? '',
+      data: (json['data'] as List<dynamic>?)
+          ?.map((item) => PaymentMethod.fromJson(item))
+          .toList() ?? [],
+      message: json['message'] ?? '',
+    );
+  }
+
+  bool get isSuccess => status == 'success';
+}
+
+// Modelo para status de subscrição do usuário
+class UserSubscriptionStatus {
+  final bool hasActiveSubscription;
+  final ActiveSubscription? subscription;
+
+  UserSubscriptionStatus({
+    required this.hasActiveSubscription,
+    this.subscription,
+  });
+
+  factory UserSubscriptionStatus.fromJson(Map<String, dynamic> json) {
+    return UserSubscriptionStatus(
+      hasActiveSubscription: json['has_active_subscription'] ?? false,
+      subscription: json['subscription'] != null 
+          ? ActiveSubscription.fromJson(json['subscription']) 
+          : null,
+    );
+  }
+}
+
+class ActiveSubscription {
+  final int id;
+  final int planType;
+  final String planName;
+  final double planPrice;
+  final DateTime expireDate;
+  final int daysRemaining;
+  final DateTime createdAt;
+  final SubscriptionPlan planDetails;
+
+  ActiveSubscription({
+    required this.id,
+    required this.planType,
+    required this.planName,
+    required this.planPrice,
+    required this.expireDate,
+    required this.daysRemaining,
+    required this.createdAt,
+    required this.planDetails,
+  });
+
+  factory ActiveSubscription.fromJson(Map<String, dynamic> json) {
+    return ActiveSubscription(
+      id: json['id'] ?? 0,
+      planType: json['plan_type'] ?? 0,
+      planName: json['plan_name'] ?? '',
+      planPrice: (json['plan_price'] as num?)?.toDouble() ?? 0.0,
+      expireDate: DateTime.tryParse(json['expire_date'] ?? '') ?? DateTime.now(),
+      daysRemaining: json['days_remaining'] ?? 0,
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      planDetails: SubscriptionPlan.fromJson(json['plan_details'] ?? {}),
+    );
+  }
+
+  bool get isActive => daysRemaining > 0;
+  String get formattedPrice => 'MT ${planPrice.toStringAsFixed(2)}';
+  String get formattedExpireDate => 
+      '${expireDate.day}/${expireDate.month}/${expireDate.year}';
+}
+
+class SubscriptionStatusResponse {
+  final String status;
+  final UserSubscriptionStatus? data;
+  final String message;
+
+  SubscriptionStatusResponse({
+    required this.status,
+    this.data,
+    required this.message,
+  });
+
+  factory SubscriptionStatusResponse.fromJson(Map<String, dynamic> json) {
+    return SubscriptionStatusResponse(
+      status: json['status'] ?? '',
+      data: json['data'] != null 
+          ? UserSubscriptionStatus.fromJson(json['data']) 
+          : null,
+      message: json['message'] ?? '',
+    );
+  }
+
+  bool get isSuccess => status == 'success';
 }

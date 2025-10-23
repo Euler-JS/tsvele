@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../services/subscription_provider.dart';
 import '../Model/subscription_model.dart';
-import '../services/subscription_service.dart';
 
 class SubscriptionPlansPage extends StatefulWidget {
   const SubscriptionPlansPage({super.key});
@@ -10,11 +11,44 @@ class SubscriptionPlansPage extends StatefulWidget {
 }
 
 class _SubscriptionPlansPageState extends State<SubscriptionPlansPage> {
-  List<SubscriptionPlan> plans = [];
-  bool isLoading = true;
-  String? errorMessage;
-  int selectedPlanIndex = -1;
-  int selectedPaymentMethod = 0; // 0 = M-Pesa, 1 = Cartão
+  final SubscriptionProvider _subscriptionProvider = SubscriptionProvider();
+  final TextEditingController _phoneController = TextEditingController();
+  bool _isProcessingPayment = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _initializeData();
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeData() async {
+    await _subscriptionProvider.initialize();
+    setState(() {});
+  }
+  bool _isProcessingPayment = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _initializeData();
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeData() async {
+    await _subscriptionProvider.initialize();
+    setState(() {});
+  }
   final TextEditingController phoneController = TextEditingController();
 
   final List<Map<String, dynamic>> paymentMethods = [

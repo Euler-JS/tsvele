@@ -1,7 +1,10 @@
 // lib/pages/profile_page.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_provider.dart';
+import '../services/subscription_provider.dart';
 import '../Model/user_model.dart';
+import '../widgets/subscription_status_widget.dart';
 import 'login_page.dart';
 import 'edit_profile_page.dart';
 
@@ -109,6 +112,10 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               _buildProfileHeader(user),
               _buildProfileInfo(user),
+              ChangeNotifierProvider(
+                create: (context) => SubscriptionProvider(),
+                child: const SubscriptionStatusWidget(),
+              ),
               _buildActionButtons(),
               const SizedBox(height: 20),
             ],
