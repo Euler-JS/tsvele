@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/subscription_provider.dart';
+import 'package:pay_with_paystack/pay_with_paystack.dart';
 import '../Model/subscription_model.dart';
+import '../services/auth_provider.dart';
+import '../services/subscription_provider.dart';
 
 class SubscriptionPlansPage extends StatefulWidget {
   const SubscriptionPlansPage({super.key});
@@ -1135,145 +1137,57 @@ class _SubscriptionPlansPageState extends State<SubscriptionPlansPage> {
   }
 
   void _processCardPayment(SubscriptionPlan plan) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Row(
-            children: [
-              const Icon(
-                Icons.credit_card,
-                color: Color(0xFF1976D2),
-                size: 28,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Pagamento por Cartão',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF333333),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Plano: ${plan.name}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                'Valor: ${plan.formattedPrice}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1976D2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Simulação de formulário de cartão
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Column(
-                  children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Número do cartão',
-                        hintText: '**** **** **** 1234',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.credit_card),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                    SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              labelText: 'Validade',
-                              hintText: 'MM/AA',
-                              border: OutlineInputBorder(),
-                            ),
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              labelText: 'CVV',
-                              hintText: '123',
-                              border: OutlineInputBorder(),
-                            ),
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancelar',
-                style: TextStyle(color: Color(0xFF333333)),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _showProcessingDialog(plan);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1976D2),
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Pagar Agora'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showProcessingDialog(SubscriptionPlan plan) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1976D2)),
-          ),
-        );
-      },
-    );
+    final authProvider = AuthProvider.instance;
+    final user = authProvider.user;
     
-    // Simular processamento
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.of(context).pop(); // Fechar loading
-      _showSuccessDialog(plan);
+    if (user == null || user.email.isEmpty) {
+      _showErrorDialog('Usuário não autenticado ou email não disponível');
+      return;
+    }
+
+    // Generate unique transaction reference
+    final uniqueTransRef = PayWithPayStack().generateUuidV4();
+
+    // Convert amount to smallest currency unit (centavos for MZN)
+    final amountInCentavos = plan.price * 100;
+
+    setState(() {
+      _isProcessingPayment = true;
     });
+
+    PayWithPayStack().now(
+      context: context,
+      secretKey: "pk_test_dd324214ed7e61a31c5bc5370047fee310a6494f", // TODO: Replace with actual Paystack secret key
+      customerEmail: user.email,
+      reference: uniqueTransRef,
+      currency: "MZN",
+      amount: amountInCentavos,
+      callbackUrl: "https://tsevelenews.tsevele.co.mz/payment/callback", // TODO: Replace with actual callback URL
+      transactionCompleted: (paymentData) async {
+        debugPrint("Payment completed: $paymentData");
+        
+        // Create subscription after successful payment
+        final subscriptionResponse = await _subscriptionProvider.createSubscription();
+        
+        if (subscriptionResponse == null || !subscriptionResponse.isSuccess) {
+          _showErrorDialog(subscriptionResponse?.message ?? 'Erro ao criar subscrição');
+          return;
+        }
+
+        setState(() {
+          _isProcessingPayment = false;
+        });
+        
+        _showSuccessDialog(plan);
+      },
+      transactionNotCompleted: (reason) {
+        debugPrint("Payment failed: $reason");
+        setState(() {
+          _isProcessingPayment = false;
+        });
+        _showErrorDialog('Pagamento não foi concluído: $reason');
+      },
+    );
   }
 
   void _showSuccessDialog(SubscriptionPlan plan) {
