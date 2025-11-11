@@ -1157,10 +1157,10 @@ class _SubscriptionPlansPageState extends State<SubscriptionPlansPage> {
 
     PayWithPayStack().now(
       context: context,
-      secretKey: "pk_test_dd324214ed7e61a31c5bc5370047fee310a6494f", // TODO: Replace with actual Paystack secret key
+      secretKey: "sk_test_d46dd9dc893e03f48c0a818af101063cf0785194", // TODO: Replace with actual Paystack secret key
       customerEmail: user.email,
       reference: uniqueTransRef,
-      currency: "MZN",
+      currency: "ZAR",
       amount: amountInCentavos,
       callbackUrl: "https://tsevelenews.tsevele.co.mz/payment/callback", // TODO: Replace with actual callback URL
       transactionCompleted: (paymentData) async {
