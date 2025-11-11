@@ -4,6 +4,7 @@ import 'package:pay_with_paystack/pay_with_paystack.dart';
 import '../Model/subscription_model.dart';
 import '../services/auth_provider.dart';
 import '../services/subscription_provider.dart';
+import '../main_navigation.dart';
 
 class SubscriptionPlansPage extends StatefulWidget {
   const SubscriptionPlansPage({super.key});
@@ -48,7 +49,18 @@ class _SubscriptionPlansPageState extends State<SubscriptionPlansPage> {
             color: Color(0xFF333333),
             size: 20,
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Verificar se pode voltar normalmente
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              // Se não pode, ir para a home
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const MainNavigationPage()),
+                (route) => false,
+              );
+            }
+          },
         ),
         title: const Text(
           'Planos Premium',
