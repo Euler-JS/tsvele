@@ -132,23 +132,33 @@ class SubscriptionService {
 
   // Verificar status da subscrição do usuário
   static Future<SubscriptionStatusResponse?> getUserSubscriptionStatus() async {
+    print('[DEBUG] getUserSubscriptionStatus called');
     try {
       final authHeaders = await getAuthHeaders();
+      print('[DEBUG] Auth headers: $authHeaders');
       
-      final response = await http.get(
-        Uri.parse('$baseUrl/subscriptions/status'),
-        headers: authHeaders,
-      );
+      final uri = Uri.parse('$baseUrl/subscriptions/status');
+      print('[DEBUG] Request URL: $uri');
+      
+      final response = await http.get(uri, headers: authHeaders);
+      
+      print('[DEBUG] Response status code: ${response.statusCode}');
+      print('[DEBUG] Response body: ${response.body}');
       
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        return SubscriptionStatusResponse.fromJson(jsonData);
+        print('[DEBUG] Parsed JSON data: $jsonData');
+        print('[DEBUG] JSON data type: ${jsonData.runtimeType}');
+        final result = SubscriptionStatusResponse.fromJson(jsonData);
+        print('[DEBUG] Created SubscriptionStatusResponse: $result');
+        return result;
       } else {
-        print('Error getting subscription status: ${response.statusCode}');
+        print('[ERROR] HTTP error ${response.statusCode}: ${response.body}');
         return null;
       }
-    } catch (e) {
-      print('Error getting subscription status: $e');
+    } catch (e, stackTrace) {
+      print('[ERROR] Exception in getUserSubscriptionStatus: $e');
+      print('[ERROR] Stack trace: $stackTrace');
       return null;
     }
   }

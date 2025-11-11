@@ -427,8 +427,19 @@ class UserSubscriptionStatus {
   });
 
   factory UserSubscriptionStatus.fromJson(Map<String, dynamic> json) {
+    print('[DEBUG] UserSubscriptionStatus.fromJson called');
+    print('[DEBUG] JSON: $json');
+    print('[DEBUG] has_active_subscription: ${json['has_active_subscription']} (type: ${json['has_active_subscription'].runtimeType})');
+    print('[DEBUG] subscription: ${json['subscription']}');
+    
+    final hasActive = json['has_active_subscription'] == true || 
+                      json['has_active_subscription'] == 'true' ||
+                      json['has_active_subscription'] == 1;
+    
+    print('[DEBUG] Parsed hasActive: $hasActive');
+    
     return UserSubscriptionStatus(
-      hasActiveSubscription: json['has_active_subscription'] ?? false,
+      hasActiveSubscription: hasActive,
       subscription: json['subscription'] != null 
           ? ActiveSubscription.fromJson(json['subscription']) 
           : null,
@@ -458,16 +469,33 @@ class ActiveSubscription {
   });
 
   factory ActiveSubscription.fromJson(Map<String, dynamic> json) {
-    return ActiveSubscription(
+    print('[DEBUG] ActiveSubscription.fromJson called');
+    print('[DEBUG] JSON: $json');
+    
+    // Parse plan_price which can be a string or number
+    double parsePlanPrice(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is num) return value.toDouble();
+      if (value is String) {
+        return double.tryParse(value) ?? 0.0;
+      }
+      return 0.0;
+    }
+    
+    final subscription = ActiveSubscription(
       id: json['id'] ?? 0,
       planType: json['plan_type'] ?? 0,
       planName: json['plan_name'] ?? '',
-      planPrice: (json['plan_price'] as num?)?.toDouble() ?? 0.0,
+      planPrice: parsePlanPrice(json['plan_price']),
       expireDate: DateTime.tryParse(json['expire_date'] ?? '') ?? DateTime.now(),
       daysRemaining: json['days_remaining'] ?? 0,
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
       planDetails: SubscriptionPlan.fromJson(json['plan_details'] ?? {}),
     );
+    
+    print('[DEBUG] Created ActiveSubscription - ID: ${subscription.id}, Days: ${subscription.daysRemaining}, IsActive: ${subscription.isActive}');
+    
+    return subscription;
   }
 
   bool get isActive => daysRemaining > 0;
@@ -488,6 +516,11 @@ class SubscriptionStatusResponse {
   });
 
   factory SubscriptionStatusResponse.fromJson(Map<String, dynamic> json) {
+    print('[DEBUG] SubscriptionStatusResponse.fromJson called');
+    print('[DEBUG] JSON: $json');
+    print('[DEBUG] Status: ${json['status']}');
+    print('[DEBUG] Data: ${json['data']}');
+    
     return SubscriptionStatusResponse(
       status: json['status'] ?? '',
       data: json['data'] != null 

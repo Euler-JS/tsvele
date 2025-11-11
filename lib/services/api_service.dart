@@ -26,9 +26,10 @@ class ApiService {
   // Buscar notícias em destaque
   static Future<List<ApiNewsModel>> getFeaturedNews() async {
     try {
+      final authHeaders = await getAuthHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/news/featured'),
-        headers: headers,
+        headers: authHeaders,
       );
       
       if (response.statusCode == 200) {
@@ -50,9 +51,10 @@ class ApiService {
   // Método que retorna lista simples de notícias
 static Future<List<ApiNewsModel>> getAllNewsSimple({int page = 1, int perPage = 50}) async {
   try {
+    final authHeaders = await getAuthHeaders();
     final response = await http.get(
       Uri.parse('$baseUrl/news?page=$page&per_page=$perPage'),
-      headers: headers,
+      headers: authHeaders,
     );
     
     if (response.statusCode == 200) {
@@ -93,7 +95,8 @@ static Future<List<ApiNewsModel>> getAllNewsSimple({int page = 1, int perPage = 
       }
       
       final uri = Uri.parse('$baseUrl/news').replace(queryParameters: queryParams);
-      final response = await http.get(uri, headers: headers);
+      final authHeaders = await getAuthHeaders();
+      final response = await http.get(uri, headers: authHeaders);
       
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -125,9 +128,10 @@ static Future<List<ApiNewsModel>> getAllNewsSimple({int page = 1, int perPage = 
   // Buscar notícia específica por ID
   static Future<ApiNewsModel> getNewsById(int id) async {
     try {
+      final authHeaders = await getAuthHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/news/$id'),
-        headers: headers,
+        headers: authHeaders,
       );
       
       if (response.statusCode == 200) {
@@ -149,9 +153,10 @@ static Future<List<ApiNewsModel>> getAllNewsSimple({int page = 1, int perPage = 
   // Buscar categorias
   static Future<List<CategoryModel>> getCategories() async {
     try {
+      final authHeaders = await getAuthHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/news-categories'),
-        headers: headers,
+        headers: authHeaders,
       );
       
       if (response.statusCode == 200) {
@@ -174,9 +179,10 @@ static Future<List<ApiNewsModel>> getAllNewsSimple({int page = 1, int perPage = 
   // Incrementar visualizações
   static Future<void> incrementViews(int newsId) async {
     try {
+      final authHeaders = await getAuthHeaders();
       await http.post(
         Uri.parse('$baseUrl/news/$newsId/views'),
-        headers: headers,
+        headers: authHeaders,
       );
     } catch (e) {
       // Falha silenciosa para incremento de views
@@ -187,9 +193,10 @@ static Future<List<ApiNewsModel>> getAllNewsSimple({int page = 1, int perPage = 
   // Buscar notícias por categoria
   static Future<List<ApiNewsModel>> getNewsByCategory(int categoryId) async {
     try {
+      final authHeaders = await getAuthHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/news/category/$categoryId'),
-        headers: headers,
+        headers: authHeaders,
       );
       
       if (response.statusCode == 200) {
@@ -212,9 +219,10 @@ static Future<List<ApiNewsModel>> getAllNewsSimple({int page = 1, int perPage = 
   // Buscar notícias mais lidas
   static Future<List<ApiNewsModel>> getMostReadNews() async {
     try {
+      final authHeaders = await getAuthHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/news/most-read'),
-        headers: headers,
+        headers: authHeaders,
       );
       
       if (response.statusCode == 200) {
@@ -237,9 +245,10 @@ static Future<List<ApiNewsModel>> getAllNewsSimple({int page = 1, int perPage = 
   // Buscar notícias recentes
   static Future<List<ApiNewsModel>> getRecentNews() async {
     try {
+      final authHeaders = await getAuthHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/news/recent'),
-        headers: headers,
+        headers: authHeaders,
       );
       
       if (response.statusCode == 200) {

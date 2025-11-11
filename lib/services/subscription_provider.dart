@@ -158,16 +158,28 @@ class SubscriptionProvider extends ChangeNotifier {
 
   // Carregar status da subscrição do usuário
   Future<void> loadUserSubscriptionStatus() async {
+    print('[DEBUG] loadUserSubscriptionStatus called');
     try {
       final response = await SubscriptionService.getUserSubscriptionStatus();
       
+      print('[DEBUG] Response received - isSuccess: ${response?.isSuccess}');
+      print('[DEBUG] Response data: ${response?.data}');
+      
       if (response != null && response.isSuccess) {
         _userSubscriptionStatus = response.data;
+        print('[DEBUG] Set _userSubscriptionStatus: $_userSubscriptionStatus');
+        print('[DEBUG] hasActiveSubscription getter returns: $hasActiveSubscription');
+        print('[DEBUG] _userSubscriptionStatus.hasActiveSubscription: ${_userSubscriptionStatus?.hasActiveSubscription}');
+        print('[DEBUG] _userSubscriptionStatus.subscription: ${_userSubscriptionStatus?.subscription}');
+      } else {
+        print('[DEBUG] Response was null or not success');
       }
     } catch (e) {
-      print('Erro ao carregar status da subscrição: $e');
+      print('[ERROR] Erro ao carregar status da subscrição: $e');
+      print('[ERROR] Stack trace: ${StackTrace.current}');
     }
     
+    print('[DEBUG] Calling notifyListeners()');
     notifyListeners();
   }
 
