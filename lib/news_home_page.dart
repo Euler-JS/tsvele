@@ -1146,7 +1146,21 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
   }
 
   Widget buildForYouSection() {
-    final forYouNews = newsItems.take(2).toList();
+    // Pegar notícias aleatórias da API
+    List<ApiNewsModel> forYouNews = [];
+    
+    if (apiNews.isNotEmpty) {
+      // Copiar a lista e embaralhar
+      final shuffledNews = List<ApiNewsModel>.from(apiNews);
+      shuffledNews.shuffle();
+      // Pegar as primeiras 4 notícias
+      forYouNews = shuffledNews.take(4).toList();
+    }
+    
+    // Se não tiver notícias da API, mostrar vazio
+    if (forYouNews.isEmpty) {
+      return const SizedBox.shrink();
+    }
     
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 0, 32),
@@ -1205,7 +1219,8 @@ class _NewsHomePageState extends State<NewsHomePage> with TickerProviderStateMix
               padding: const EdgeInsets.only(left: 0),
               itemCount: forYouNews.length,
               itemBuilder: (context, index) {
-                return buildEnhancedNewsCard(forYouNews[index], isPersonalized: true);
+                final news = forYouNews[index];
+                return buildApiNewsCard(news, isPersonalized: true);
               },
             ),
           ),
