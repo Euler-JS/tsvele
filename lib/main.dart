@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:news_app/pages/login_page.dart';
 import 'package:news_app/pages/onboarding_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:news_app/services/auth_service.dart';
 import 'main_navigation.dart';
 
 void main() {
@@ -65,7 +66,10 @@ class _SplashScreenState extends State<SplashScreen> {
     
     final prefs = await SharedPreferences.getInstance();
     final bool hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
-    final bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    
+    // Verificar se há token válido salvo
+    final token = await AuthService.getToken();
+    final bool hasValidToken = token != null && token.isNotEmpty;
 
     if (mounted) {
       if (!hasSeenOnboarding) {
@@ -74,14 +78,14 @@ class _SplashScreenState extends State<SplashScreen> {
           context,
           MaterialPageRoute(builder: (context) => const OnboardingPage()),
         );
-      } else if (!isLoggedIn) {
-        // Já viu onboarding mas não está logado - mostrar login
+      } else if (!hasValidToken) {
+        // Já viu onboarding mas não tem token válido - mostrar login
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginPage()),
         );
       } else {
-        // Usuário já está logado - ir direto para o app
+        // Usuário tem token válido - ir direto para o app
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MainNavigationPage()),

@@ -679,13 +679,20 @@ class _DetailNewsState extends State<DetailNews> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
+                    onPressed: () async {
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const SubscriptionPlansPage(),
                         ),
                       );
+                      
+                      // Se retornou true, recarregar a página
+                      if (result == true && mounted) {
+                        setState(() {
+                          // Isso vai recarregar a notícia e verificar o status premium
+                        });
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,

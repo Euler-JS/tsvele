@@ -400,12 +400,19 @@ class _SubscriptionStatusWidgetState extends State<SubscriptionStatusWidget> {
     );
   }
 
-  void _navigateToSubscriptionPlans() {
-    Navigator.push(
+  void _navigateToSubscriptionPlans() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const SubscriptionPlansPage(),
       ),
     );
+    
+    // Se retornou true, significa que a subscrição foi bem-sucedida
+    if (result == true) {
+      // Recarregar o provider para atualizar o status da subscrição
+      final provider = Provider.of<SubscriptionProvider>(context, listen: false);
+      await provider.initialize();
+    }
   }
 }

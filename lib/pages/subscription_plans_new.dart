@@ -1193,6 +1193,7 @@ class _SubscriptionPlansPageState extends State<SubscriptionPlansPage> {
   void _showSuccessDialog(SubscriptionPlan plan) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -1256,13 +1257,61 @@ class _SubscriptionPlansPageState extends State<SubscriptionPlansPage> {
                   ],
                 ),
               ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.green, size: 16),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Recarregando conteúdo premium...',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           actions: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Fechar dialog
-                Navigator.of(context).pop(); // Voltar para a tela anterior
+              onPressed: () async {
+                // Recarregar dados da subscrição
+                await _subscriptionProvider.initialize();
+                
+                if (mounted) {
+                  Navigator.of(context).pop(); // Fechar dialog
+                  Navigator.of(context).pop(true); // Voltar para a tela anterior com resultado true
+                  
+                  // Mostrar mensagem de sucesso
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.white),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text('Conteúdo premium desbloqueado!'),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFC7A87B),
