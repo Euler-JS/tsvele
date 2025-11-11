@@ -2670,7 +2670,7 @@ class _EnhancedFeaturedCarouselState extends State<EnhancedFeaturedCarousel> {
                               const SizedBox(height: 8),
                               
                               Text(
-                                news.description,
+                                news.description.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ''),
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.9),
                                   fontSize: 14,

@@ -757,7 +757,7 @@ class _BookmarksPageState extends State<BookmarksPage>
                   
                   // Descrição
                   Text(
-                    news.description,
+                    news.description.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ''),
                     style: TextStyle(
                       fontSize: 14,
                       color: const Color(0xFF333333).withOpacity(0.7),

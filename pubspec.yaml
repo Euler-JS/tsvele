@@ -41,6 +41,7 @@ dependencies:
   http: ^1.2.2
   provider: ^6.1.1
   pay_with_paystack: ^1.0.14
+  flutter_html: ^3.0.0-beta.2
 
 dev_dependencies:
   flutter_test:

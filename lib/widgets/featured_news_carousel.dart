@@ -233,7 +233,7 @@ class _FeaturedNewsCarouselState extends State<FeaturedNewsCarousel> {
                                 
                                 // Descrição
                                 Text(
-                                  news.description,
+                                  news.description.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ''),
                                   style: TextStyle(
                                     color: Colors.white.withOpacity(0.9),
                                     fontSize: 14,

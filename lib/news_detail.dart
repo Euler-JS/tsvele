@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:news_app/Model/news_model.dart';
 import 'package:news_app/pages/subscription_plans_new.dart';
 import 'package:news_app/Model/news_helper.dart' as news_helper; // Import do NewsHelper local
@@ -600,14 +601,60 @@ class _DetailNewsState extends State<DetailNews> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          contentToShow,
-          style: const TextStyle(
-            fontSize: 17,
-            height: 1.6,
-            color: Color(0xFF2D3748),
-            letterSpacing: 0.2,
-          ),
+        Html(
+          data: contentToShow,
+          style: {
+            "body": Style(
+              fontSize: FontSize(17),
+              lineHeight: LineHeight(1.6),
+              color: const Color(0xFF2D3748),
+              margin: Margins.zero,
+              padding: HtmlPaddings.zero,
+            ),
+            "p": Style(
+              fontSize: FontSize(17),
+              lineHeight: LineHeight(1.6),
+              color: const Color(0xFF2D3748),
+              margin: Margins.only(bottom: 16),
+            ),
+            "h1": Style(
+              fontSize: FontSize(24),
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1A202C),
+              margin: Margins.only(top: 20, bottom: 12),
+            ),
+            "h2": Style(
+              fontSize: FontSize(22),
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1A202C),
+              margin: Margins.only(top: 18, bottom: 10),
+            ),
+            "h3": Style(
+              fontSize: FontSize(20),
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1A202C),
+              margin: Margins.only(top: 16, bottom: 8),
+            ),
+            "strong": Style(
+              fontWeight: FontWeight.bold,
+            ),
+            "em": Style(
+              fontStyle: FontStyle.italic,
+            ),
+            "a": Style(
+              color: const Color(0xFFC7A87B),
+              textDecoration: TextDecoration.underline,
+            ),
+            "ul": Style(
+              margin: Margins.only(top: 8, bottom: 16, left: 16),
+            ),
+            "ol": Style(
+              margin: Margins.only(top: 8, bottom: 16, left: 16),
+            ),
+            "li": Style(
+              margin: Margins.only(bottom: 8),
+            ),
+          },
         ),
         
         if (showPremiumButton) ...[
