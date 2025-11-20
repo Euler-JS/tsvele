@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:news_app/Model/news_model.dart';
-import 'package:news_app/news_detail.dart';
-import 'package:news_app/Model/news_helper.dart' as news_helper;
-import 'package:news_app/main_navigation.dart';
+import 'package:Tsevele/Model/news_model.dart';
+import 'package:Tsevele/news_detail.dart';
+import 'package:Tsevele/Model/news_helper.dart' as news_helper;
+import 'package:Tsevele/main_navigation.dart';
 import '../../main.dart';
 
 class BookmarksPage extends StatefulWidget {

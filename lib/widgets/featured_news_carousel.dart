@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:news_app/Model/news_model.dart';
-import 'package:news_app/news_detail.dart';
+import 'package:Tsevele/Model/news_model.dart';
+import 'package:Tsevele/news_detail.dart';
 
 class FeaturedNewsCarousel extends StatefulWidget {
   const FeaturedNewsCarousel({super.key});

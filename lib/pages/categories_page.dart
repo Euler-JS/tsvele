@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:news_app/Model/news_model.dart';
-import 'package:news_app/Model/api_news_model.dart';
-import 'package:news_app/services/api_service.dart';
-import 'package:news_app/news_detail.dart';
+import 'package:Tsevele/Model/news_model.dart';
+import 'package:Tsevele/Model/api_news_model.dart';
+import 'package:Tsevele/services/api_service.dart';
+import 'package:Tsevele/news_detail.dart';
 
 class CategoriesPage extends StatefulWidget {
   const CategoriesPage({super.key});

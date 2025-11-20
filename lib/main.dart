@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:news_app/pages/login_page.dart';
-import 'package:news_app/pages/onboarding_page.dart';
+import 'package:Tsevele/pages/login_page.dart';
+import 'package:Tsevele/pages/onboarding_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:news_app/services/auth_service.dart';
+import 'package:Tsevele/services/auth_service.dart';
 import 'main_navigation.dart';
 
 void main() {

@@ -1,4 +1,4 @@
-# news_app
+# tsevele
 
 A new Flutter project.
 

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:news_app/news_home_page.dart';
-import 'package:news_app/pages/categories_page.dart';
-import 'package:news_app/pages/podcasts_page.dart';
-import 'package:news_app/pages/bookmarks_page.dart';
-import 'package:news_app/pages/videos_page.dart';
-import 'package:news_app/pages/subscription_plans_new.dart';
+import 'package:Tsevele/news_home_page.dart';
+import 'package:Tsevele/pages/categories_page.dart';
+import 'package:Tsevele/pages/podcasts_page.dart';
+import 'package:Tsevele/pages/bookmarks_page.dart';
+import 'package:Tsevele/pages/videos_page.dart';
+import 'package:Tsevele/pages/subscription_plans_new.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});

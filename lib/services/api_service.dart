@@ -1,7 +1,7 @@
 // lib/services/api_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:news_app/Model/api_news_model.dart';
+import 'package:Tsevele/Model/api_news_model.dart';
 import 'auth_service.dart';
 
 class ApiService {

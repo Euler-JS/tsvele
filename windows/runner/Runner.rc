@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "news_app" "\0"
+            VALUE "CompanyName", "mz.co" "\0"
+            VALUE "FileDescription", "Tsevele" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "news_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "news_app.exe" "\0"
-            VALUE "ProductName", "news_app" "\0"
+            VALUE "InternalName", "Tsevele" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2024 mz.co. All rights reserved." "\0"
+            VALUE "OriginalFilename", "Tsevele.exe" "\0"
+            VALUE "ProductName", "Tsevele" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

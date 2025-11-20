@@ -1,17 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:news_app/Model/news_model.dart';
-import 'package:news_app/Model/api_news_model.dart';
-import 'package:news_app/Model/user_model.dart';
-import 'package:news_app/Model/user_stats_model.dart';
-import 'package:news_app/pages/all_most_read_news_page.dart';
-import 'package:news_app/pages/all_recent_news_page.dart';
-import 'package:news_app/services/api_service.dart';
-import 'package:news_app/services/auth_service.dart';
-import 'package:news_app/services/user_stats_service.dart';
-import 'package:news_app/news_detail.dart';
-import 'package:news_app/pages/profile_page.dart';
+import 'package:Tsevele/Model/news_model.dart';
+import 'package:Tsevele/Model/api_news_model.dart';
+import 'package:Tsevele/Model/user_model.dart';
+import 'package:Tsevele/Model/user_stats_model.dart';
+import 'package:Tsevele/pages/all_most_read_news_page.dart';
+import 'package:Tsevele/pages/all_recent_news_page.dart';
+import 'package:Tsevele/services/api_service.dart';
+import 'package:Tsevele/services/auth_service.dart';
+import 'package:Tsevele/services/user_stats_service.dart';
+import 'package:Tsevele/news_detail.dart';
+import 'package:Tsevele/pages/profile_page.dart';
 
 // Classe helper para categorias
 class CategoryItem {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:news_app/Model/news_model.dart';
-import 'package:news_app/pages/subscription_plans_new.dart';
-import 'package:news_app/Model/news_helper.dart' as news_helper; // Import do NewsHelper local
+import 'package:Tsevele/Model/news_model.dart';
+import 'package:Tsevele/pages/subscription_plans_new.dart';
+import 'package:Tsevele/Model/news_helper.dart' as news_helper; // Import do NewsHelper local
 
 class DetailNews extends StatefulWidget {
   const DetailNews({super.key, required this.news});
