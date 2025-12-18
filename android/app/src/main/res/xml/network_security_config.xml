@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Permite conexões HTTPS e HTTP (cleartext) para todos os domínios em debug/release -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <!-- Confia em certificados do sistema -->
+            <certificates src="system" />
+            <!-- Confia em certificados do usuário (útil para debug) -->
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+    
+    <!-- Configuração específica para o domínio da API -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">tsevele.co.mz</domain>
+        <domain includeSubdomains="true">tsevelenews.tsevele.co.mz</domain>
+        <!-- Permite também conexão direta por IP como fallback -->
+        <domain includeSubdomains="true">41.220.140.222</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>
